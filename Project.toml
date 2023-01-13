@@ -2,3 +2,11 @@ name = "JutulDarcyAD"
 uuid = "41f0c4f5-9bdd-4ef1-8c3a-d454dff2d562"
 authors = ["Ziyi Yin <ziyi.yin@gatech.edu>"]
 version = "0.1.0"
+
+[deps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+Jutul = "2b460a1a-8a2b-45b2-b125-b5c536396eb9"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MultiComponentFlash = "35e5bd01-9722-4017-9deb-64a5d32478ff"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
