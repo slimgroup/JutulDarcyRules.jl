@@ -1,8 +1,17 @@
-export compute_face_trans_
+export TransToK, KtoTrans, compute_face_trans_, K1to3
+
+K1to3(Kx::AbstractVecOrMat{T}) where T = vcat(vec(Kx)', vec(Kx)', vec(Kx)')
 
 ### Can get rid of this clutter when https://github.com/FluxML/Zygote.jl/issues/1357 is addressed
 
-function compute_face_trans_(g::JutulGeometry, K::AbstractArray{T, N}) where {T, N}
+compute_face_trans_(K::AbstractMatrix{T}, g::CartesianMesh) where {T<:Number} = compute_face_trans_(g, K)
+function compute_face_trans_(g::CartesianMesh, K::AbstractMatrix{T}) where {T<:Number}
+    g1 = ChainRulesCore.@ignore_derivatives tpfv_geometry(g)
+    return compute_face_trans_(g1, K)
+end
+compute_face_trans_(K::AbstractMatrix{T}, g::JutulGeometry) where {T<:Number} = compute_face_trans_(g, K)
+
+function compute_face_trans_(g::JutulGeometry, K::AbstractMatrix{T}) where {T<:Number}
     T_hf = compute_half_face_trans_(g.cell_centroids, g.face_centroids, g.normals, g.areas, K, g.neighbors)
     return compute_face_trans_(T_hf, g.neighbors)
 end
@@ -63,3 +72,31 @@ function compute_half_trace_trans_(fpos, cell, faces, face_areas, perm, dim, fac
     end
     return compute_half_face_trans(A, K, C, Nn)
 end
+
+function TransToK(g::JutulGeometry, Trans::AbstractVector{T}) where T<:Number
+
+    # ## Set up L-BFGS
+    function fg(F, G, x)
+        grads = gradient(Flux.params(x)) do
+            F = norm(compute_face_trans_(g, K1to3(x))-Trans)^2 / norm(Trans)^2
+        end
+        G .= grads[x]
+        return F
+    end
+
+    Kx = mean(Trans) / mean(g.volumes)^(1.0/3.0) * ones(length(g.volumes))
+    result = optimize(Optim.only_fg!(fg), Kx, LBFGS(), Optim.Options(iterations = 200))
+    Kxinv = result.minimizer
+    @assert norm(compute_face_trans_(g, K1to3(Kxinv))-Trans)^2 / norm(Trans)^2 <= 1e-8
+    return Kxinv
+
+end
+
+TransToK(Trans::AbstractVector{T}, g::CartesianMesh) where {T<:Number} = TransToK(g, Trans)
+function TransToK(g::CartesianMesh, Trans::AbstractVector{T}) where {T<:Number}
+    g1 = ChainRulesCore.@ignore_derivatives tpfv_geometry(g)
+    return TransToK(g1, Trans)
+end
+TransToK(Trans::AbstractVector{T}, g::JutulGeometry) where {T<:Number} = TransToK(g, Trans)
+
+const KtoTrans = compute_face_trans_
