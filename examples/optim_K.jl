@@ -37,6 +37,6 @@ Kxinv = result.minimizer
 
 println(norm(Kxinv-vec(Kxtrue))/norm(Kxtrue))
 
-Kxinv = TransToK(g, Trans_true)
+@time Kxinv = TransToK(g, Trans_true)
 
 println(norm(Kxinv-vec(Kxtrue))/norm(Kxtrue))

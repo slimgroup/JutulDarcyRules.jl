@@ -1,15 +1,9 @@
-export jutulModeling
+const kr = BrooksCoreyRelPerm(sys, [2.0, 2.0])
 
-struct jutulModeling{T}
-    model::SimulationModel
-    parameters::Dict
-    state0::Dict
-    tstep::Vector{T}
-    forces::NamedTuple
-end
+### types
+include("Types/jutulForce.jl")
+include("Types/jutulModel.jl")
+include("Types/jutulState.jl")
 
-display(S::jutulModeling{T}) where T = println("jutulModeling structure with:\n$(sum(S.tstep)) days in $(length(S.tstep)) time steps")
-
-function (S::jutulModeling{T})(K::AbstractArray{T}) where T
-    states, rep = simulate(S.state0, S.model, S.tstep, parameters = S.parameters, forces = S.forces, info_level = 1, max_timestep_cuts = 1000)
-end
+### operators
+include("Operators/jutulModeling.jl")
