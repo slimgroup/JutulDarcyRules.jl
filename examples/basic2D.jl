@@ -36,6 +36,6 @@ result = S(Trans, q)
 ## plotting
 fig=figure(figsize=(20,12));
 subplot(1,2,1);
-imshow(reshape(result.states[end].Saturations[1,:], n[1], n[end])', vmin=0, vmax=1); colorbar(); title("saturation")
+imshow(reshape(result.states[end].Saturations, n[1], n[end])', vmin=0, vmax=1); colorbar(); title("saturation")
 subplot(1,2,2);
 imshow(reshape(result.states[end].Pressure, n[1], n[end])', vmin=0, vmax=maximum(result.states[end].Pressure)); colorbar(); title("pressure")
