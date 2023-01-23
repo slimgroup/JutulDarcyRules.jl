@@ -1,17 +1,17 @@
 export TransToK, KtoTrans, compute_face_trans_, K1to3
 
-K1to3(Kx::AbstractVecOrMat{T}) where T = vcat(vec(Kx)', vec(Kx)', vec(Kx)')
+K1to3(Kx::AbstractArray{T}) where T = vcat(vec(Kx)', vec(Kx)', vec(Kx)')
 
 ### Can get rid of this clutter when https://github.com/FluxML/Zygote.jl/issues/1357 is addressed
 
-compute_face_trans_(K::AbstractMatrix{T}, g::CartesianMesh) where {T<:Number} = compute_face_trans_(g, K)
-function compute_face_trans_(g::CartesianMesh, K::AbstractMatrix{T}) where {T<:Number}
+compute_face_trans_(K::AbstractArray{T}, g::CartesianMesh) where {T<:Number} = compute_face_trans_(g, K)
+function compute_face_trans_(g::CartesianMesh, K::AbstractArray{T}) where {T<:Number}
     g1 = ChainRulesCore.@ignore_derivatives tpfv_geometry(g)
     return compute_face_trans_(g1, K)
 end
-compute_face_trans_(K::AbstractMatrix{T}, g::JutulGeometry) where {T<:Number} = compute_face_trans_(g, K)
+compute_face_trans_(K::AbstractArray{T}, g::JutulGeometry) where {T<:Number} = compute_face_trans_(g, K)
 
-function compute_face_trans_(g::JutulGeometry, K::AbstractMatrix{T}) where {T<:Number}
+function compute_face_trans_(g::JutulGeometry, K::AbstractArray{T}) where {T<:Number}
     T_hf = compute_half_face_trans_(g.cell_centroids, g.face_centroids, g.normals, g.areas, K, g.neighbors)
     return compute_face_trans_(T_hf, g.neighbors)
 end

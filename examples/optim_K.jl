@@ -11,14 +11,13 @@ nz = 15
 dims = (nx, ny, nz)
 g = CartesianMesh(dims, (30.0, 30.0, 30.0) .* dims)
 nc = prod(dims)
-Darcy = 9.869232667160130e-13
-Kx = 20 * JutulDarcyAD.md * ones(nx, nz)
+Kx = 20 * md * ones(nx, nz)
 Kxtrue = deepcopy(Kx)
 Kxtrue[:, 6:8] .*= 6
 
 Trans_true = KtoTrans(g, K1to3(Kxtrue))
 
-Kx = 10 * JutulDarcyAD.md * ones(number_of_cells(g))
+Kx = 10 * md * ones(number_of_cells(g))
 @time grad = gradient(() -> .5 * norm(KtoTrans(g, K1to3(Kx))-Trans_true)^2f0, Flux.params(Kx))[Kx]
 
 # ## Set up L-BFGS
