@@ -1,4 +1,4 @@
-export jutulModel
+export jutulModel, CartesianMesh
 
 struct jutulModel{D, T}
     n::NTuple{D, Int64}

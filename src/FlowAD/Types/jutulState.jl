@@ -40,6 +40,8 @@ function jutulInitState(M::jutulModel{D, T}; ρH2O::T=T(1053.0), g::T=T(10.0)) w
 end
 
 get_nt(state::jutulStates) = length(state.states)
+get_nn(state::jutulAllState) = length(state.Saturations)
+get_nn(state::jutulStates) = get_nn(state.states[1])
 
 ###### turn jutulStates to state dictionary
 
@@ -61,9 +63,49 @@ vec(state::jutulStates) = vcat(vcat([state.states[i].Saturations for i = 1:get_n
 vec(state::jutulAllState) = vcat(state.Saturations, state.Pressure)
 
 IndexStyle(state::jutulAllState) = IndexLinear()
-getindex(state::jutulAllState, i::Int) = vec(state)[i]
-setindex!(state::jutulAllState{T}, v::T, i::Int) where T = begin vcat(state.Saturations, state.Pressure)[i] = v end
-setindex!(state::jutulStates{T}, v::T, i::Int) where T = begin vcat(vcat([state.states[i].Saturations for i = 1:get_nt(state)]...), vcat([state.states[i].Pressure for i = 1:get_nt(state)]...))[i] = v end
+function getindex(state::jutulAllState, i::Int)
+    if i <= get_nn(state)
+        ## getindex for saturation
+        return state.Saturations[i]
+    else
+        ## getindex for pressure
+        return state.Pressure[i-get_nn(state)]
+    end
+end
+
+function getindex(state::jutulStates, i::Int)
+    idx_t = div(i-1, get_nn(state)) + 1
+    idx_n = mod(i-1, get_nn(state)) + 1
+    if idx_t <= get_nt(state)
+        ## getindex for saturation
+        return state.states[idx_t].Saturations[idx_n]
+    else
+        ## getindex for pressure
+        return state.states[idx_t-get_nt(state)].Pressure[idx_n]
+    end
+end
+
+function setindex!(state::jutulAllState, v, i::Int)
+    if i <= get_nn(state)
+        ## setindex for saturation
+        state.Saturations[i] = v
+    else
+        ## setindex for pressure
+        state.Pressure[i-get_nn(state)] = v
+    end
+end
+
+function setindex!(state::jutulStates, v, i::Int)
+    idx_t = div(i-1, get_nn(state)) + 1
+    idx_n = mod(i-1, get_nn(state)) + 1
+    if idx_t <= get_nt(state)
+        ## setindex for saturation
+        state.states[idx_t].Saturations[idx_n] = v
+    else
+        ## setindex for pressure
+        state.states[idx_t-get_nt(state)].Pressure[idx_n] = v
+    end
+end
 
 firstindex(A::jutulAllState) = 1
 lastindex(A::jutulAllState) = length(A)
@@ -73,3 +115,10 @@ norm(A::jutulAllState, order::Real=2) = norm(vec(A), order)
 dot(A::jutulAllState, B::jutulAllState) = dot(vec(A), vec(B))
 dot(A::jutulAllState, B::AbstractArray) = dot(vec(A), vec(B))
 dot(A::AbstractArray, B::jutulAllState) = dot(vec(A), vec(B))
+
+function (states::jutulAllState)(x::AbstractArray)
+    @assert length(states) == length(x)
+    states_ = deepcopy(states)
+    states_ .= x
+    return states_
+end

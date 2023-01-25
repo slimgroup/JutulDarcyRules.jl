@@ -1,7 +1,5 @@
 ## A simple 2D example for fluid-flow simulation
 
-using Jutul
-using JutulDarcy
 using JutulDarcyAD
 using LinearAlgebra
 using PyPlot
