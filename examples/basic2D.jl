@@ -31,7 +31,7 @@ S = jutulModeling(model, tstep)
 
 ## simulation
 Trans = KtoTrans(CartesianMesh(model), K1to3(K))
-result = S(Trans, q)
+@time result = S(Trans, q)
 
 ## plotting
 fig=figure(figsize=(20,12));

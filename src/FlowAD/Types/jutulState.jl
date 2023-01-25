@@ -57,13 +57,13 @@ length(state::jutulAllState) = length(state.Saturations) + length(state.Pressure
 length(state::jutulStates) = sum([length(state.states[i]) for i = 1:get_nt(state)])
 size(state::jutulAllState) = (length(state),)
 
-vec(state::jutulStates) = vcat([vcat(state.states[i].Saturations, state.states[i].Pressure) for i = 1:get_nt(state)]...)
+vec(state::jutulStates) = vcat(vcat([state.states[i].Saturations for i = 1:get_nt(state)]...), vcat([state.states[i].Pressure for i = 1:get_nt(state)]...))
 vec(state::jutulAllState) = vcat(state.Saturations, state.Pressure)
 
 IndexStyle(state::jutulAllState) = IndexLinear()
 getindex(state::jutulAllState, i::Int) = vec(state)[i]
 setindex!(state::jutulAllState{T}, v::T, i::Int) where T = begin vcat(state.Saturations, state.Pressure)[i] = v end
-setindex!(state::jutulStates{T}, v::T, i::Int) where T = begin vcat([vcat(state.states[i].Saturations, state.states[i].Pressure) for i = 1:get_nt(state)]...)[i] = v end
+setindex!(state::jutulStates{T}, v::T, i::Int) where T = begin vcat(vcat([state.states[i].Saturations for i = 1:get_nt(state)]...), vcat([state.states[i].Pressure for i = 1:get_nt(state)]...))[i] = v end
 
 firstindex(A::jutulAllState) = 1
 lastindex(A::jutulAllState) = length(A)
