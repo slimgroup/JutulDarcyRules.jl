@@ -1,0 +1,44 @@
+name: CI-JutulDarcyAD
+
+on: 
+  # Trigger the workflow on push to main or pull request
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        version:
+          - '1.7'
+
+        os:
+          - ubuntu-latest
+          - macos-latest
+        arch:
+          - x64
+
+    steps:
+      - name: Checkout JutulDarcyAD
+        uses: actions/checkout@v2
+
+      - name: Setup julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+          
+      - name: Build
+        uses: julia-actions/julia-buildpkg@latest
+
+      - name: Run tests
+        uses: julia-actions/julia-runtest@latest

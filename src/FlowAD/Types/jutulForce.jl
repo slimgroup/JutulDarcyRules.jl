@@ -17,3 +17,5 @@ function force(M::jutulModel{D, T}, f::jutulForce{D, T}; ρCO2::T=T(501.9)) wher
     src  = [SourceTerm(cell[i], f.irate[i] * ρCO2, fractional_flow = [T(f.irate[i] > 0), T(1)-T(f.irate[i] > 0)]) for i = 1:length(f.loc)]
     return setup_forces(model, sources = src)
 end
+
+==(A::jutulForce{D, T}, B::jutulForce{D, T}) where {D,T} = (A.irate == B.irate && A.loc == B.loc)

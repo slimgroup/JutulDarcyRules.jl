@@ -11,4 +11,11 @@ model, init_state = setup_model_state()
     init_state[rdm_idx] = rdm_num
     @test init_state[rdm_idx] == rdm_num
     @test vec(init_state) == init_state[1:end]
+    
+    @info "test =="
+    init_state1 = deepcopy(init_state)
+    init_state1[1] = 0.2
+    @test init_state1 != init_state
+    init_state[1] = 0.2
+    @test init_state1 == init_state
 end

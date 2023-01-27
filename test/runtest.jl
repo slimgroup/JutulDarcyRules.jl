@@ -11,4 +11,7 @@ include("test_utils.jl")
 
 include("test_conversion.jl")
 include("test_jutulState.jl")
+include("test_jutulForce.jl")
+include("test_jutulModel.jl")
+
 include("test_gradient.jl")

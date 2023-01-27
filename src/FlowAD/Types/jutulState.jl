@@ -128,3 +128,5 @@ for op in [:+, :-, :*, :/]
         return A(broadcast($(op), vec(A), vec(B)))
     end
 end
+
+==(A::jutulAllState{T}, B::jutulAllState{T}) where {T} = vec(A) == vec(B)

@@ -87,14 +87,23 @@ trans_z_init = reshape(x_init[(n[1]-1)*n[end]+1:end], n[1], n[end]-1)
 
 fig=figure(figsize=(20,12));
 subplot(1,3,1);
-imshow(trans_x_init', vmin=minimum(trans_x), vmax=maximum(trans_x)); colorbar(); title("initial transmissibility")
+imshow(trans_x_init', vmin=minimum(trans_x), vmax=maximum(trans_x)); colorbar(); title("initial transmissibility x")
 subplot(1,3,2);
-imshow(trans_x0', vmin=minimum(trans_x), vmax=maximum(trans_x)); colorbar(); title("inverted transmissibility")
+imshow(trans_x0', vmin=minimum(trans_x), vmax=maximum(trans_x)); colorbar(); title("inverted transmissibility x")
 subplot(1,3,3);
-imshow(trans_x', vmin=minimum(trans_x), vmax=maximum(trans_x)); colorbar(); title("true transmissibility")
-savefig("transx.png", bbox_inches="tight", dpi=300)
-state0 = S(x0, q)
+imshow(trans_x', vmin=minimum(trans_x), vmax=maximum(trans_x)); colorbar(); title("true transmissibility x")
+savefig("trans_x.png", bbox_inches="tight", dpi=300)
 
+fig=figure(figsize=(20,12));
+subplot(1,3,1);
+imshow(trans_z_init', vmin=minimum(trans_z), vmax=maximum(trans_z)); colorbar(); title("initial transmissibility z")
+subplot(1,3,2);
+imshow(trans_z0', vmin=minimum(trans_z), vmax=maximum(trans_z)); colorbar(); title("inverted transmissibility z")
+subplot(1,3,3);
+imshow(trans_z', vmin=minimum(trans_z), vmax=maximum(trans_z)); colorbar(); title("true transmissibility z")
+savefig("trans_z.png", bbox_inches="tight", dpi=300)
+
+state0 = S(x0, q)
 
 fig=figure(figsize=(20,12));
 subplot(1,3,1);
@@ -103,4 +112,13 @@ subplot(1,3,2);
 imshow(reshape(state0.states[end].Saturations, n[1], n[end])', vmin=0, vmax=1); colorbar(); title("inverted saturation")
 subplot(1,3,3);
 imshow(reshape(state.states[end].Saturations, n[1], n[end])', vmin=0, vmax=1); colorbar(); title("true saturation")
+savefig("saturation.png", bbox_inches="tight", dpi=300)
 
+fig=figure(figsize=(20,12));
+subplot(1,3,1);
+imshow(reshape(state_init.states[end].Pressure, n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("initial pressure")
+subplot(1,3,2);
+imshow(reshape(state0.states[end].Pressure, n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("inverted pressure")
+subplot(1,3,3);
+imshow(reshape(state.states[end].Pressure, n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("true pressure")
+savefig("pressure.png", bbox_inches="tight", dpi=300)

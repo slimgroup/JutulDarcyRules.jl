@@ -19,3 +19,5 @@ function model_(M::jutulModel{D, T}) where {D, T}
     replace_variables!(model, RelativePermeabilities = kr)
     return model
 end
+
+==(A::jutulModel{D, T}, B::jutulModel{D, T}) where {D,T} = (A.n == B.n && A.d == B.d && A.ϕ == B.ϕ && A.K == B.K)
