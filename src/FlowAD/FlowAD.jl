@@ -7,3 +7,4 @@ include("Types/jutulState.jl")
 
 ### operators
 include("Operators/jutulModeling.jl")
+include("Operators/rrule.jl")

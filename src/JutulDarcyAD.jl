@@ -12,8 +12,10 @@ module JutulDarcyAD
     using ChainRulesCore
     import Jutul: JutulGeometry, get_facepos, compute_face_trans, compute_half_face_trans, expand_perm
     import Jutul: SimulationModel
+    import Base: +, -, *, /
     import Base: display, length, size, getindex, setindex!, IndexStyle, vec, firstindex, lastindex
     import LinearAlgebra: norm, dot
+    import ChainRulesCore: rrule
 
     JutulDarcyADPATH = dirname(pathof(JutulDarcyAD))
 

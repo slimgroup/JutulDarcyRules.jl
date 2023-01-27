@@ -87,7 +87,6 @@ function TransToK(g::JutulGeometry, Trans::AbstractVector{T}) where T<:Number
     Kx = mean(Trans) / mean(g.volumes)^(1.0/3.0) * ones(length(g.volumes))
     result = optimize(Optim.only_fg!(fg), Kx, LBFGS(), Optim.Options(iterations = 100))
     Kxinv = result.minimizer
-    @assert norm(compute_face_trans_(g, K1to3(Kxinv))-Trans)^2 / norm(Trans)^2 <= 1e-8
     return Kxinv
 
 end

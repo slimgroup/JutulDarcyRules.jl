@@ -122,3 +122,9 @@ function (states::jutulAllState)(x::AbstractArray)
     states_ .= x
     return states_
 end
+
+for op in [:+, :-, :*, :/]
+    @eval function $(op)(A::jutulAllState{T}, B::jutulAllState{T}) where T
+        return A(broadcast($(op), vec(A), vec(B)))
+    end
+end
