@@ -1,4 +1,3 @@
-using Jutul
 using JutulDarcyAD
 using Flux
 using LinearAlgebra
@@ -17,7 +16,7 @@ Kxtrue[:, 6:8] .*= 6
 
 Trans_true = KtoTrans(g, K1to3(Kxtrue))
 
-Kx = 10 * md * ones(number_of_cells(g))
+Kx = 10 * md * ones(prod(g.dims))
 @time grad = gradient(() -> .5 * norm(KtoTrans(g, K1to3(Kx))-Trans_true)^2f0, Flux.params(Kx))[Kx]
 
 # ## Set up L-BFGS
@@ -36,6 +35,7 @@ Kxinv = result.minimizer
 
 println(norm(Kxinv-vec(Kxtrue))/norm(Kxtrue))
 
-@time Kxinv = TransToK(g, Trans_true)
+@time Kxinv1 = TransToK(g, Trans_true)
 
-println(norm(Kxinv-vec(Kxtrue))/norm(Kxtrue))
+println(norm(Kxinv1-K1to3(Kxtrue))/norm(K1to3(Kxtrue)))
+println(norm(KtoTrans(g, Kxinv1)-Trans_true)/norm(Trans_true))

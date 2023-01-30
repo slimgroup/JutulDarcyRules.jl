@@ -7,6 +7,8 @@ using Printf
 using Random
 using LinearAlgebra
 
+Random.seed!(2023)
+
 include("test_utils.jl")
 
 include("test_conversion.jl")
