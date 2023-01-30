@@ -1,9 +1,10 @@
 ## A simple 2D example for fluid-flow simulation
 
+using DrWatson
+@quickactivate "JutulDarcyAD-example"
 using JutulDarcyAD
 using LinearAlgebra
 using PyPlot
-using SlimPlotting
 
 ## grid size
 n = (30, 1, 15)

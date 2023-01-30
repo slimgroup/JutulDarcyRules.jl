@@ -1,6 +1,6 @@
-# JutulDarcyAD.jl
+<h1 align="center">JutulDarcyAD: auto-differentiable two-phase flow solvers based on Jutul and JutulDarcy</h1>
 
-[![][license-img]][license-status]
+[![][license-img]][license-status] [![][zenodo-img]][zenodo-status]
 
 Interoperate [Jutul.jl] and [JutulDarcy.jl] to other Julia packages via [ChainRules.jl]
 
@@ -22,3 +22,5 @@ SLIM public GitHub account, [https://github.com/slimgroup](https://github.com/sl
 [ChainRules.jl]:https://github.com/JuliaDiff/ChainRules.jl
 [license-status]:LICENSE
 [license-img]:http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat?style=plastic
+[zenodo-status]:https://doi.org/10.5281/zenodo.7587717
+[zenodo-img]:https://zenodo.org/badge/DOI/10.5281/zenodo.7587717.svg?style=plastic
