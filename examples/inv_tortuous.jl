@@ -1,30 +1,27 @@
-## A simple 2D example for permeability inversion
+## A 64×64 2D example for permeability inversion of a tortuous channel
 
 using DrWatson
 @quickactivate "JutulDarcyAD-example"
-using Pkg; Pkg.instantiate();
-
 using JutulDarcyAD
 using LinearAlgebra
 using PyPlot
 using SlimPlotting
 using Flux
 using LineSearches
+using JLD2
 
 sim_name = "2D-K-inv"
-exp_name = "channel"
+exp_name = "tortuous"
 
 mkpath(datadir())
 mkpath(plotsdir())
 
 ## grid size
-n = (30, 1, 15)
-d = (30.0, 30.0, 30.0)
-
-## permeability
-K0 = 20 * md * ones(n)
-K = deepcopy(K0)
-K[:,:,8:10] .*= 6.0
+JLD2.@load datadir("K.jld2") K K0;
+K = Float64.(K * md);
+K0 = Float64.(K0 * md);
+n = (size(K,1), 1, size(K,2))
+d = (15.0, 10.0, 15.0)
 
 ϕ = 0.25
 model0 = jutulModel(n, d, ϕ, K1to3(K0))
@@ -35,8 +32,8 @@ tstep = 40 * ones(50)
 tot_time = sum(tstep)
 
 ## injection & production
-inj_loc = (3, 1, 9) .* d
-prod_loc = (28, 1, 9) .* d
+inj_loc = (3, 1, 32) .* d
+prod_loc = (62, 1, 32) .* d
 irate = 5e-3
 q = jutulForce(irate, [inj_loc, prod_loc])
 

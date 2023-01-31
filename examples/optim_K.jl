@@ -1,3 +1,5 @@
+using DrWatson
+@quickactivate "JutulDarcyAD-example"
 using JutulDarcyAD
 using Flux
 using LinearAlgebra
