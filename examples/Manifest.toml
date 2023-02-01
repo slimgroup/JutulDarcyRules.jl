@@ -2,7 +2,7 @@
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "45c35dd061b809858a391c8846ed7fa5e03a7489"
+project_hash = "15774279c31c6c2ae99be85157eadf2d11fe09b5"
 
 [[deps.AMD]]
 deps = ["Libdl", "LinearAlgebra", "SparseArrays", "Test"]
@@ -434,9 +434,9 @@ uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[deps.GPUArrays]]
 deps = ["Adapt", "GPUArraysCore", "LLVM", "LinearAlgebra", "Printf", "Random", "Reexport", "Serialization", "Statistics"]
-git-tree-sha1 = "494f1e456000c00c93dde79b38094e023f639dac"
+git-tree-sha1 = "4dfaff044eb2ce11a897fecd85538310e60b91e6"
 uuid = "0c68f7d7-f131-5f86-a1c3-88cf8149b2d7"
-version = "8.6.1"
+version = "8.6.2"
 
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
@@ -599,11 +599,11 @@ version = "0.1.5"
 
 [[deps.JutulDarcyAD]]
 deps = ["ChainRulesCore", "Flux", "Jutul", "JutulDarcy", "LinearAlgebra", "MultiComponentFlash", "Optim", "Statistics", "Zygote"]
-git-tree-sha1 = "7a3d892481f150fa676ece4d2cb3c9061b27a89c"
+git-tree-sha1 = "119c946eaf87e71870b1c75fdb31634bd4efb4d3"
 repo-rev = "main"
 repo-url = "https://github.com/slimgroup/JutulDarcyAD.jl"
 uuid = "41f0c4f5-9bdd-4ef1-8c3a-d454dff2d562"
-version = "0.1.1"
+version = "0.1.2"
 
 [[deps.KernelAbstractions]]
 deps = ["Adapt", "Atomix", "InteractiveUtils", "LinearAlgebra", "MacroTools", "SparseArrays", "StaticArrays", "UUIDs", "UnsafeAtomics", "UnsafeAtomicsLLVM"]
