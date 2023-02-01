@@ -2,7 +2,6 @@ model, model0, q, tstep = test_config()
 
 ## set up modeling operator
 S = jutulModeling(model0, tstep)
-S = jutulModeling(model0, tstep)
 
 ## simulation
 x = log.(KtoTrans(CartesianMesh(model), model.K))

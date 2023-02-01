@@ -19,6 +19,11 @@ module JutulDarcyAD
 
     JutulDarcyADPATH = dirname(pathof(JutulDarcyAD))
 
+    visCO2 = 1e-4
+    visH2O = 1e-3
+    ρCO2 = 501.9
+    ρH2O = 1053.0
+
     const Darcy = 9.869232667160130e-13
     const md = Darcy * 1e-3
     
