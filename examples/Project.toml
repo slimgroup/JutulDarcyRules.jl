@@ -4,6 +4,8 @@ authors = ["Ziyi Yin"]
 [deps]
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+JOLI = "bb331ad6-a1cf-11e9-23da-9bcb53c69f6f"
+JUDI = "f3b833dc-6b2e-5b9c-b940-873ed6319979"
 Jutul = "2b460a1a-8a2b-45b2-b125-b5c536396eb9"
 JutulDarcy = "82210473-ab04-4dce-b31b-11573c4f8e0a"
 JutulDarcyAD = "41f0c4f5-9bdd-4ef1-8c3a-d454dff2d562"

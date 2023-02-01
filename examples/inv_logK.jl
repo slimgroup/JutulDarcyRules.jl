@@ -1,27 +1,30 @@
-## A 64×64 2D example for permeability inversion of a tortuous channel
+## A simple 2D example for permeability inversion
 
 using DrWatson
 @quickactivate "JutulDarcyAD-example"
+using Pkg; Pkg.instantiate();
+
 using JutulDarcyAD
 using LinearAlgebra
 using PyPlot
 using SlimPlotting
 using Flux
 using LineSearches
-using JLD2
 
 sim_name = "2D-K-inv"
-exp_name = "tortuous"
+exp_name = "channel"
 
 mkpath(datadir())
 mkpath(plotsdir())
 
 ## grid size
-JLD2.@load datadir("K.jld2") K K0;
-K = Float64.(K * md);
-K0 = Float64.(K0 * md);
-n = (size(K,1), 1, size(K,2))
-d = (15.0, 10.0, 15.0)
+n = (30, 1, 15)
+d = (30.0, 30.0, 30.0)
+
+## permeability
+K0 = 20 * md * ones(n)
+K = deepcopy(K0)
+K[:,:,8:10] .*= 6.0
 
 ϕ = 0.25
 model0 = jutulModel(n, d, ϕ, K1to3(K0))
@@ -32,8 +35,8 @@ tstep = 40 * ones(50)
 tot_time = sum(tstep)
 
 ## injection & production
-inj_loc = (3, 1, 32) .* d
-prod_loc = (62, 1, 32) .* d
+inj_loc = (3, 1, 9) .* d
+prod_loc = (28, 1, 9) .* d
 irate = 5e-3
 q = jutulForce(irate, [inj_loc, prod_loc])
 
@@ -64,7 +67,7 @@ fhistory = zeros(niterations)
 for j=1:niterations
 
     fval = f(logK0)
-    @time g = gradient(()->f(logK0), Flux.params(logK0))[logK0]
+    g = gradient(()->f(logK0), Flux.params(logK0))[logK0]
     p = -g
     
     println("Inversion iteration no: ",j,"; function value: ",fval)
@@ -92,11 +95,11 @@ fig_name = @strdict n d ϕ tstep irate niterations lower upper inj_loc prod_loc
 
 fig=figure(figsize=(20,12));
 subplot(1,3,1);
-imshow(K_init', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("initial permeability")
+imshow(K_init[:,1,:]', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("initial permeability")
 subplot(1,3,2);
-imshow(K0', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("inverted permeability")
+imshow(K0[:,1,:]', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("inverted permeability")
 subplot(1,3,3);
-imshow(K', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("true permeability")
+imshow(K[:,1,:]', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("true permeability")
 tight_layout()
 safesave(joinpath(plotsdir(sim_name, exp_name), savename(fig_name; digits=6)*"_K.png"), fig);
 close(fig)
@@ -164,3 +167,4 @@ imshow(trans_z', vmin=minimum(trans_z), vmax=maximum(trans_z)); colorbar(); titl
 tight_layout()
 safesave(joinpath(plotsdir(sim_name, exp_name), savename(fig_name; digits=6)*"_transz.png"), fig);
 close(fig)
+

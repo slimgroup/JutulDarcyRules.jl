@@ -62,7 +62,7 @@ ls = BackTracking(order=3, iterations=10)
 lower, upper = 1.1*minimum(x), 0.9*maximum(x)
 prj(x) = max.(min.(x,upper),lower)
 # Main loop
-niterations = 50
+niterations = 100
 fhistory = zeros(niterations)
 
 for j=1:niterations
@@ -81,7 +81,7 @@ for j=1:niterations
         return misfit
     end
 
-    step, fval = ls(f_, 1.0, fval, dot(g, p))
+    step, fval = ls(f_, 1e-1, fval, dot(g, p))
 
     # Update model and bound projection
     global x0 = prj(x0 .+ step .* p)
