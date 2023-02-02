@@ -8,7 +8,7 @@ function setup_model_state()
     K = 200 * rand() * md * ones(n)
     ϕ = rand()
     model = jutulModel(n, d, ϕ, K1to3(K))
-    init_state = jutulInitState(model)
+    init_state = jutulState(model)
     return model, init_state
 
 end

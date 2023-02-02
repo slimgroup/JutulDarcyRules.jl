@@ -15,7 +15,7 @@ CartesianMesh(M::jutulModel{D, T}) where {D, T} = CartesianMesh(M.n, M.d .* M.n)
 function model_(M::jutulModel{D, T}) where {D, T}
     g = CartesianMesh(M.n, M.d .* M.n)
     G = discretized_domain_tpfv_flow(tpfv_geometry(g), porosity = M.ϕ, permeability = M.K)
-    model = SimulationModel(G, sys)
+    model = SimulationModel(G, sys, output_level = :all)
     replace_variables!(model, RelativePermeabilities = kr)
     return model
 end
