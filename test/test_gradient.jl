@@ -9,8 +9,8 @@ x0 = log.(KtoTrans(CartesianMesh(model0), model0.K))
 
 states = S(x, q)
 
-dx = randn(length(x0))
-dx = dx/norm(dx) * norm(x0)/100
+dx = rand(length(x0))
+dx = dx/norm(dx) * norm(x0)/10
 
 misfit(x0) = 0.5 * norm(S(x0, q) - states).^2
 g = gradient(()->misfit(x0), Flux.params(x0))
