@@ -23,11 +23,11 @@ jutulState(state::Dict{Symbol, T}) where T =
 
 jutulStates(states::Vector{Dict{Symbol, T}}) where T = jutulStates([jutulState(states[i]) for i = 1:length(states)])
 
-function jutulState(M::jutulModel{D, T}; ρH2O::T=T(ρH2O), g::T=T(10.0)) where {D, T}
+function jutulState(M::jutulModel{D, T}; ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), g::T=T(10.0)) where {D, T}
     ## default state at time 0 with all water
     Z = repeat((1:M.n[end])*M.d[end], inner = prod(M.n[1:2]))
     p0 = ρH2O * g * Z # rho * g * h
-    state0 = setup_state(model_(M), Pressure = p0, Saturations = [0.0, 1.0])
+    state0 = setup_state(model_(M; ρCO2=ρCO2, ρH2O=ρH2O), Pressure = p0, Saturations = [0.0, 1.0])
     return jutulState(state0)
 end
 

@@ -39,6 +39,7 @@ end
 
 mean(x) = sum(x)/length(x)
 
+## adapted from https://github.com/slimgroup/JUDI.jl/blob/master/test/testing_utils.jl
 function grad_test(misfit, x0, dx, g; maxiter=6, h0=5f-2, stol=1f-1)
     # init
     err1 = zeros(Float32, maxiter)

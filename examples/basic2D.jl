@@ -2,6 +2,7 @@
 
 using DrWatson
 @quickactivate "JutulDarcyAD-example"
+
 using JutulDarcyAD
 using LinearAlgebra
 using PyPlot
@@ -16,7 +17,7 @@ K = 20 * md * ones(n)
 model = jutulModel(n, d, ϕ, K1to3(K))
 
 ## simulation time steppings
-tstep = 20 * ones(50)
+tstep = 40 * ones(50)
 tot_time = sum(tstep)
 
 ## injection & production
@@ -38,4 +39,4 @@ fig=figure(figsize=(20,12));
 subplot(1,2,1);
 imshow(reshape(result.states[end].Saturations, n[1], n[end])', vmin=0, vmax=1); colorbar(); title("saturation")
 subplot(1,2,2);
-imshow(reshape(result.states[end].Pressure, n[1], n[end])', vmin=0, vmax=maximum(result.states[end].Pressure)); colorbar(); title("pressure")
+imshow(reshape(result.states[end].Pressure, n[1], n[end])', vmin=minimum(result.states[end].Pressure), vmax=maximum(result.states[end].Pressure)); colorbar(); title("pressure")

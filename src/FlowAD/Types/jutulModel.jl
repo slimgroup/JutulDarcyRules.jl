@@ -12,10 +12,15 @@ display(M::jutulModel{D, T}) where {D, T} =
 
 CartesianMesh(M::jutulModel{D, T}) where {D, T} = CartesianMesh(M.n, M.d .* M.n)
 
-function model_(M::jutulModel{D, T}) where {D, T}
+function model_(M::jutulModel{D, T}; ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O)) where {D, T}
     g = CartesianMesh(M.n, M.d .* M.n)
     G = discretized_domain_tpfv_flow(tpfv_geometry(g), porosity = M.ϕ, permeability = M.K)
     model = SimulationModel(G, sys, output_level = :all)
+    p_ref = 1e7 # 100 bar
+    c = [1e-4, 1e-6]./1e5
+    rho_at_ref = [ρCO2, ρH2O]
+    dens = ConstantCompressibilityDensities(p_ref = p_ref, density_ref = rho_at_ref, compressibility = c)
+    replace_variables!(model, PhaseMassDensities = dens)
     replace_variables!(model, RelativePermeabilities = kr)
     return model
 end

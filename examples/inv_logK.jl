@@ -2,12 +2,10 @@
 
 using DrWatson
 @quickactivate "JutulDarcyAD-example"
-using Pkg; Pkg.instantiate();
 
 using JutulDarcyAD
 using LinearAlgebra
 using PyPlot
-using SlimPlotting
 using Flux
 using LineSearches
 

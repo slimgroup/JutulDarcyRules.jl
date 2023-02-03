@@ -15,9 +15,9 @@ function (S::jutulModeling{D, T})(LogTransmissibilities::AbstractVector{T}, f::j
     Transmissibilities = exp.(LogTransmissibilities)
     forces = force(S.model, f; ρCO2=ρCO2)
     tstep = day * S.tstep
-    model = model_(S.model)
+    model = model_(S.model; ρCO2=ρCO2, ρH2O=ρH2O)
     model.domain.grid.trans .= Transmissibilities
-    parameters = setup_parameters(model, PhaseViscosities = [visCO2, visH2O], density = [ρCO2, ρH2O]); # 0.1 and 1 cP
-    states, rep = simulate(dict(state0), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
+    parameters = setup_parameters(model, PhaseViscosities = [visCO2, visH2O]); # 0.1 and 1 cP
+    states, _ = simulate(dict(state0), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
     return jutulStates(states)
 end

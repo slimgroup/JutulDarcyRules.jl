@@ -2,10 +2,10 @@
 
 using DrWatson
 @quickactivate "JutulDarcyAD-example"
+
 using JutulDarcyAD
 using LinearAlgebra
 using PyPlot
-using SlimPlotting
 using Flux
 using LineSearches
 using JLD2
