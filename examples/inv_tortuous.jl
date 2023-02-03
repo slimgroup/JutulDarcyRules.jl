@@ -2,10 +2,10 @@
 
 using DrWatson
 @quickactivate "JutulDarcyAD-example"
+
 using JutulDarcyAD
 using LinearAlgebra
 using PyPlot
-using SlimPlotting
 using Flux
 using LineSearches
 using JLD2
@@ -42,57 +42,61 @@ S = jutulModeling(model, tstep)
 
 ## simulation
 mesh = CartesianMesh(model)
-T(x) = log.(KtoTrans(mesh, K1to3(x)))
+T(x) = log.(KtoTrans(mesh, K1to3(exp.(x))))
 
-K_init = deepcopy(K0)
+logK0 = log.(K0)
+logK = log.(K)
+logK_init = deepcopy(logK0)
 
-@time state0 = S(T(K0), q)
-@time state = S(T(K), q)
+@time state0 = S(T(logK0), q)
+@time state = S(T(logK), q)
 
 state_init = deepcopy(state0)
-f(K) = .5 * norm(S(T(K),q)[1:length(tstep)*prod(n)]-state[1:length(tstep)*prod(n)])^2
+f(logK) = .5 * norm(S(T(logK),q)[1:length(tstep)*prod(n)]-state[1:length(tstep)*prod(n)])^2
 ls = BackTracking(order=3, iterations=10)
 
-lower, upper = 0.9*minimum(K), 1.1*maximum(K)
+lower, upper = 1.1*minimum(logK), 0.9*maximum(logK)
 prj(x) = max.(min.(x,upper),lower)
 # Main loop
-niterations = 50
+niterations = 100
 fhistory = zeros(niterations)
 
 for j=1:niterations
 
-    fval = f(K0)
-    g = gradient(()->f(K0), Flux.params(K0))[K0]
-    p = -g/norm(g, Inf) * norm(K_init, Inf)
+    fval = f(logK0)
+    @time g = gradient(()->f(logK0), Flux.params(logK0))[logK0]
+    p = -g
     
     println("Inversion iteration no: ",j,"; function value: ",fval)
     fhistory[j] = fval
 
     # linesearch
     function f_(α)
-        misfit = f(prj(K0 .+ α * p))
+        misfit = f(prj(logK0 .+ α * p))
         @show α, misfit
         return misfit
     end
 
-    step, fval = ls(f_, 1.0, fval, dot(g, p))
+    step, fval = ls(f_, 1e-1, fval, dot(g, p))
 
     # Update model and bound projection
-    global K0 = prj(K0 .+ step .* p)
+    global logK0 = prj(logK0 .+ step .* p)
 end
 
 ## plotting
-state0 = S(T(K0), q)
+state0 = S(T(logK0), q)
+K0 = exp.(logK0)
+K_init = exp.(logK_init)
 
 fig_name = @strdict n d ϕ tstep irate niterations lower upper inj_loc prod_loc
 
 fig=figure(figsize=(20,12));
 subplot(1,3,1);
-imshow(K_init[:,1,:]', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("initial permeability")
+imshow(K_init', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("initial permeability")
 subplot(1,3,2);
-imshow(K0[:,1,:]', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("inverted permeability")
+imshow(K0', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("inverted permeability")
 subplot(1,3,3);
-imshow(K[:,1,:]', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("true permeability")
+imshow(K', vmin=minimum(K), vmax=maximum(K)); colorbar(); title("true permeability")
 tight_layout()
 safesave(joinpath(plotsdir(sim_name, exp_name), savename(fig_name; digits=6)*"_K.png"), fig);
 close(fig)
@@ -125,9 +129,9 @@ tight_layout()
 safesave(joinpath(plotsdir(sim_name, exp_name), savename(fig_name; digits=6)*"_loss.png"), fig);
 close(fig)
 
-x0 = T(K0)
-x_init = T(K_init)
-x = T(K)
+x0 = T(logK0)
+x_init = T(logK_init)
+x = T(logK)
 
 ## plotting
 trans_x = reshape(x[1:(n[1]-1)*n[end]], n[1]-1, n[end])
@@ -160,4 +164,3 @@ imshow(trans_z', vmin=minimum(trans_z), vmax=maximum(trans_z)); colorbar(); titl
 tight_layout()
 safesave(joinpath(plotsdir(sim_name, exp_name), savename(fig_name; digits=6)*"_transz.png"), fig);
 close(fig)
-

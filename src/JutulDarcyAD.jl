@@ -27,7 +27,7 @@ module JutulDarcyAD
     const Darcy = 9.869232667160130e-13
     const md = Darcy * 1e-3
     
-    const sys = ImmiscibleSystem((LiquidPhase(), VaporPhase()))
+    const sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()))
     const day = 24*3600.0
 
     include("PropertyConversion/PropertyConversion.jl")
