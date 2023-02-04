@@ -33,4 +33,12 @@ module JutulDarcyAD
     include("PropertyConversion/PropertyConversion.jl")
     include("FlowAD/FlowAD.jl")
 
+    ### hack
+    import Jutul: solve!, linear_solve_return
+    function solve!(sys; dx = sys.dx, r = sys.r, J = sys.jac)
+        dx .= -(J\r)
+        @assert all(isfinite, dx) "Linear solve resulted in non-finite values."
+        return linear_solve_return()
+    end
+
 end # module JutulDarcyAD
