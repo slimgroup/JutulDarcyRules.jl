@@ -11,7 +11,7 @@ module JutulDarcyAD
     using Flux
     using ChainRulesCore
     import Jutul: JutulGeometry, get_facepos, compute_face_trans, compute_half_face_trans, expand_perm
-    import Jutul: SimulationModel
+    import Jutul: SimulationModel, select_output_variables!
     import Base: +, -, *, /, ==
     import Base: display, length, size, getindex, setindex!, IndexStyle, vec, firstindex, lastindex
     import LinearAlgebra: norm, dot
@@ -27,7 +27,6 @@ module JutulDarcyAD
     const Darcy = 9.869232667160130e-13
     const md = Darcy * 1e-3
     
-    const sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()))
     const day = 24*3600.0
 
     include("PropertyConversion/PropertyConversion.jl")

@@ -18,8 +18,8 @@ end
 display(state::jutulAllState{T}) where T = println("$(typeof(state))")
 
 jutulState(state::Dict{Symbol, T}) where T =
-    jutulState(state[:PhaseMassMobilities], state[:PhaseMassDensities], state[:RelativePermeabilities], 
-    state[:Saturations][1,:], state[:Pressure], state[:TotalMasses])
+    jutulState(state[:Reservoir][:PhaseMassMobilities], state[:Reservoir][:PhaseMassDensities], state[:Reservoir][:RelativePermeabilities], 
+    state[:Reservoir][:Saturations][1,:], state[:Reservoir][:Pressure], state[:Reservoir][:TotalMasses])
 
 jutulStates(states::Vector{Dict{Symbol, T}}) where T = jutulStates([jutulState(states[i]) for i = 1:length(states)])
 
