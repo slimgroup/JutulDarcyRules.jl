@@ -21,7 +21,7 @@ mkpath(plotsdir())
 JLD2.@load datadir("BGCompass_tti_625m.jld2") m d;
 v = Float64.(sqrt.(1f0./m));
 d = Float64.(d);
-function VtoK(v::Matrix{T}, d::Tuple{T, T}; α=T(1.03f0)) where T
+function VtoK(v::Matrix{T}, d::Tuple{T, T}; α::T=T(10)) where T
 
     n = size(v)
     idx_wb = find_water_bottom(v.-minimum(v))
@@ -30,9 +30,9 @@ function VtoK(v::Matrix{T}, d::Tuple{T, T}; α=T(1.03f0)) where T
     capgrid = Int(round(T(50)/d[2]))
     for i = 1:n[1]
         Kh[i,1:idx_wb[i]-1] .= T(1e-10)  # water layer
-        Kh[i,idx_wb[i]:idx_ucfmt[i]-capgrid-1] .= α*v[i,idx_wb[i]:idx_ucfmt[i]-capgrid-1].+T(15)
+        Kh[i,idx_wb[i]:idx_ucfmt[i]-capgrid-1] .= α*exp.(v[i,idx_wb[i]:idx_ucfmt[i]-capgrid-1])
         Kh[i,idx_ucfmt[i]-capgrid:idx_ucfmt[i]-1] .= T(1e-3)
-        Kh[i,idx_ucfmt[i]:end] .= α*v[i,idx_ucfmt[i]:end].+T(200)
+        Kh[i,idx_ucfmt[i]:end] .= α*exp.(v[i,idx_ucfmt[i]:end]) .- T(320)
     end
     return Kh
 end
@@ -45,7 +45,7 @@ d = (d[1], 10.0, d[2])
 model = jutulModel(n, d, ϕ, K1to3(K))
 
 ## simulation time steppings
-tstep = 40 * ones(50)
+tstep = 400 * ones(50)
 tot_time = sum(tstep)
 
 ## injection & production
@@ -64,3 +64,9 @@ T(x) = log.(KtoTrans(mesh, K1to3(exp.(x))))
 logK = log.(K)
 
 @time state = S(T(logK), q)
+
+fig=figure(figsize=(20,12));
+imshow(reshape(state.states[end].Saturations, n[1], n[end])', vmin=0, vmax=1); colorbar(); title("true saturation")
+
+fig=figure(figsize=(20,12));
+imshow(reshape(state.states[1].Pressure, n[1], n[end])'); colorbar(); title("true pressure")
