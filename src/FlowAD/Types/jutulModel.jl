@@ -21,7 +21,7 @@ function model_(M::jutulModel{D, T}; ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O)) where
     rho_at_ref = [ρCO2, ρH2O]
     dens = ConstantCompressibilityDensities(p_ref = p_ref, density_ref = rho_at_ref, compressibility = c)
     replace_variables!(model, PhaseMassDensities = dens)
-    replace_variables!(model, RelativePermeabilities = kr)
+    replace_variables!(model, RelativePermeabilities = BrooksCoreyRelPerm(sys, [2.0, 2.0], [0.1, 0.1], 1.0))
     return model
 end
 
