@@ -1,45 +1,53 @@
 function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, f::jutulForce{D, N};
-    state0::jutulState{T}=jutulState(S.model), visCO2::T=T(visCO2), visH2O::T=T(visH2O),
+    state0=nothing, visCO2::T=T(visCO2), visH2O::T=T(visH2O),
     ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), info_level::Int64=-1) where {D, T, N}
     
     Transmissibilities = exp.(LogTransmissibilities)
-    forces = force(S.model, f; ρCO2=ρCO2)
+
+    ### set up simulation time
     tstep = day * S.tstep
-    model = model_(S.model; ρCO2=ρCO2, ρH2O=ρH2O)
-    model.domain.grid.trans .= Transmissibilities
-    parameters = setup_parameters(model, PhaseViscosities = [visCO2, visH2O]); # 0.1 and 1 cP
-    states, _ = simulate(dict(state0), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
-    output = jutulStates(states)
-    cfg = optimization_config(model, parameters, use_scaling = true, rel_min = 0.1, rel_max = 10)
-    for (ki, vi) in cfg
-        if ki in [:TwoPointGravityDifference, :PhaseViscosities]
-            vi[:active] = false
-        end
-        if ki == :Transmissibilities
-            vi[:scaler] = :log
-        end
+
+    ### set up simulation configurations
+    model, parameters, state0_, forces = setup_well_model(S.model, f, tstep; visCO2=visCO2, visH2O=visH2O, ρCO2=ρCO2, ρH2O=ρH2O)
+    model.models.Reservoir.domain.grid.trans .= Transmissibilities
+    parameters[:Reservoir][:Transmissibilities] = Transmissibilities
+
+    if isnothing(state0)
+        state0 = state0_
+    else
+        state0 = dict(state0)
     end
-    cfg[:Transmissibilities][:use_scaling] = false
+
+    ### simulation
+    sim, config = setup_reservoir_simulator(model, state0, parameters);
+    states, report = simulate!(sim, tstep, forces = forces, config = config, max_timestep_cuts = 1000, info_level=info_level);
+    output = jutulStates(states)
+    
+    ### optimization framework
+    cfg = optimization_config(model, parameters, Dict(:Reservoir => [:FluidVolume, :Transmissibilities], :Injector => [:FluidVolume]))
+    cfg[:Reservoir][:Transmissibilities][:scaler] = :log
 
     function pullback(dy)
-        states_dy = output(dy)
-        states_ref = dict(output-states_dy)
-        function mass_mismatch(m, state, dt, step_no, forces)
-            state_ref = states_ref[step_no]
-            fld = :Saturations
-            fld2 = :Pressure
-            val = state[fld]
-            val2 = state[fld2]
-            ref = state_ref[fld]
-            ref2 = state_ref[fld2]
-            return 0.5 * sum((val[1,:] - ref[1,:]).^2) + 0.5 * sum((val2-ref2).^2)
-        end
-        Jutul.evaluate_objective(mass_mismatch, model, states_ref, tstep, forces)
-        F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(model,
-        dict(state0), parameters, tstep, forces, mass_mismatch, cfg, print = -1, param_obj = true);
+        states_ref_ = output(vec(output)-dy)
+        check_valid_state(states_ref_)
+        states_ref = dict(states_ref_)
+        mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step(m, state, dt, step_no, forces, states_ref)
+        F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(
+            model, state0, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config);
         g = similar(x0);
-        output = F_and_dF(F_o, g, x0);
+        misfit = F_and_dF(F_o, g, x0);
         return NoTangent(), g[1:length(LogTransmissibilities)], NoTangent()
     end
     return output, pullback
+end
+
+function loss_per_step(m, state, dt, step_no, forces, states_ref)
+    state_ref = states_ref[step_no]
+    fld = :Saturations
+    fld2 = :Pressure
+    val = state[:Reservoir][fld]
+    val2 = state[:Reservoir][fld2]
+    ref = state_ref[:Reservoir][fld]
+    ref2 = state_ref[:Reservoir][fld2]
+    return 0.5 * sum((val[1,:] - ref[1,:]).^2) + 0.5 * sum((val2-ref2).^2)
 end

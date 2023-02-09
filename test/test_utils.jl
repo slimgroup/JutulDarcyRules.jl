@@ -1,40 +1,26 @@
-function setup_model_state()
-
-    ## grid size
-    n = (rand(3:5), rand(3:5), rand(3:5))
-    d = 10 .* (rand(), rand(), rand())
+function test_config()
+    n = (30, 1, 15)
+    d = (30.0, 30.0, 30.0)
 
     ## permeability
-    K = 200 * rand() * md * ones(n)
-    ϕ = rand()
-    model = jutulModel(n, d, ϕ, K1to3(K))
-    init_state = jutulState(model)
-    return model, init_state
-
-end
-
-function test_config()
-    n = (10, 1, 10)
-    d = (100.0, 100.0, 100.0)
-
-    K0 = 20 * md * ones(n)
-    K = deepcopy(K0)
-    K[:,:,6:end] .*= 5
+    K0 = 200 * md * ones(n)
     ϕ = 0.25
+    K = deepcopy(K0)
+    K[:,:,1:2:end] .*= 100
 
     model0 = jutulModel(n, d, ϕ, K1to3(K0))
     model = jutulModel(n, d, ϕ, K1to3(K))
 
     ## simulation time steppings
-    tstep = 20 * ones(50)
+    tstep = 50 * ones(10)
 
     ## injection & production
-    inj_loc = (2, 1, 8) .* d
-    prod_loc = (8, 1, 8) .* d
+    inj_loc = (15, 1, 10) .* d
     irate = 5e-3
-    q = jutulForce(irate, [inj_loc, prod_loc])
+    q = jutulForce(irate, [inj_loc])
+    state0 = jutulState(setup_well_model(model, q, tstep)[3])
 
-    return model, model0, q, tstep
+    return model, model0, q, state0, tstep
 end
 
 mean(x) = sum(x)/length(x)
