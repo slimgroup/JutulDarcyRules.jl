@@ -1,0 +1,127 @@
+## A 2D compass example
+
+using DrWatson
+@quickactivate "JutulDarcyAD-example"
+
+using JutulDarcyAD
+using LinearAlgebra
+using PyPlot
+using Flux
+using LineSearches
+using JLD2
+using JUDI
+using Statistics
+
+sim_name = "2D-K-inv"
+exp_name = "compass"
+
+mkpath(datadir())
+mkpath(plotsdir())
+
+## grid size
+JLD2.@load datadir("BGCompass_tti_625m.jld2") m d;
+v = Float64.(sqrt.(1f0./m));
+d = Float64.(d);
+function VtoK(v::Matrix{T}, d::Tuple{T, T}; α::T=T(20)) where T
+
+    n = size(v)
+    idx_wb = find_water_bottom(v.-minimum(v))
+    idx_ucfmt = find_water_bottom((v.-T(3.5)).*(v.>T(3.5)))
+    Kh = zeros(T, n)
+    capgrid = Int(round(T(50)/d[2]))
+    for i = 1:n[1]
+        Kh[i,1:idx_wb[i]-1] .= T(1e-10)  # water layer
+        Kh[i,idx_wb[i]:idx_ucfmt[i]-capgrid-1] .= α*exp.(v[i,idx_wb[i]:idx_ucfmt[i]-capgrid-1])
+        Kh[i,idx_ucfmt[i]-capgrid:idx_ucfmt[i]-1] .= T(1e-3)
+        Kh[i,idx_ucfmt[i]:end] .= α*exp.(v[i,idx_ucfmt[i]:end]) .- α*exp(T(3.5))
+    end
+    return Kh
+end
+Kh = VtoK(v, d);
+K = Float64.(Kh * md);
+n = (size(K,1), 1, size(K,2))
+d = (d[1], 1000.0, d[2])
+
+ϕ = 0.25
+model = jutulModel(n, d, ϕ, K1to3(K))
+
+## simulation time steppings
+tstep = 160 * ones(50)
+tot_time = sum(tstep)
+
+## injection & production
+inj_loc = (Int(round(n[1]/2)), 1, n[end]-60) .* d
+irate = 0.3
+q = jutulForce(irate, [inj_loc])
+
+## set up modeling operator
+S = jutulModeling(model, tstep)
+
+## simulation
+mesh = CartesianMesh(model)
+T(x) = log.(KtoTrans(mesh, K1to3(exp.(x))))
+
+logK = log.(K)
+
+@time state = S(T(logK), q)
+
+## plotting
+fig=figure(figsize=(20,12));
+subplot(1,2,1);
+imshow(reshape(Saturations(state.states[25]), n[1], n[end])'); colorbar(); title("saturation")
+subplot(1,2,2);
+imshow(reshape(Pressure(state.states[25]), n[1], n[end])'); colorbar(); title("pressure")
+
+#### inversion
+logK0 = deepcopy(logK)
+logK0[v.>3.5] .= mean(logK[v.>3.5])
+
+f(logK) = .5 * norm(S(T(logK),q)[1:length(tstep)*prod(n)]-state[1:length(tstep)*prod(n)])^2
+ls = BackTracking(order=3, iterations=10)
+
+lower, upper = 1.1*minimum(logK), 0.9*maximum(logK)
+prj(x) = max.(min.(x,upper),lower)
+# Main loop
+niterations = 100
+fhistory = zeros(niterations)
+fval = 0
+for j=1:niterations
+
+    @time gs = gradient(Flux.params(logK0)) do
+        global fval = f(logK0)
+    end
+    g = gs[logK0]
+    p = -g/norm(g, Inf)
+    
+    println("Inversion iteration no: ",j,"; function value: ",fval)
+    fhistory[j] = fval
+
+    # linesearch
+    function f_(α)
+        misfit = f(prj(logK0 .+ α * p))
+        @show α, misfit
+        return misfit
+    end
+
+    step, fval = ls(f_, 1e-1, fval, dot(g, p))
+
+    # Update model and bound projection
+    global logK0 = prj(logK0 .+ step .* p)
+
+    fig_name = @strdict j n d ϕ tstep irate niterations lower upper inj_loc
+
+    ### plotting
+    fig=figure(figsize=(20,12));
+    subplot(1,3,1);
+    imshow(exp.(logK)', vmin=minimum(exp.(logK)), vmax=maximum(exp.(logK))); colorbar(); title("true permeability")
+    subplot(1,3,2);
+    imshow(exp.(logK0)', vmin=minimum(exp.(logK)), vmax=maximum(exp.(logK))); colorbar(); title("inverted permeability")
+    subplot(1,3,3);
+    imshow(exp.(logK)'.-exp.(logK0)', vmin=minimum(exp.(logK)), vmax=maximum(exp.(logK))); colorbar(); title("diff")
+    tight_layout()
+    safesave(joinpath(plotsdir(sim_name, exp_name), savename(fig_name; digits=6)*"_diff.png"), fig);
+    close(fig)
+
+end
+
+JLD2.@save "compass-inv.jld2" logK logK0 state

@@ -34,9 +34,8 @@ tot_time = sum(tstep)
 
 ## injection & production
 inj_loc = (3, 1, 9) .* d
-prod_loc = (28, 1, 9) .* d
 irate = 5e-3
-q = jutulForce(irate, [inj_loc, prod_loc])
+q = jutulForce(irate, [inj_loc])
 
 ## set up modeling operator
 S = jutulModeling(model, tstep)
