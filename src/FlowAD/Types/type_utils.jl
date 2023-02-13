@@ -23,7 +23,7 @@ function setup_well_model(M::jutulModel{D, T}, f::jutulForce{D, T}, tstep::Vecto
     ### set up model, parameters
     sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()), reference_densities = [ρH2O, ρCO2])
     domain = discretized_domain_tpfv_flow(tpfv_geometry(CartesianMesh(M)), porosity = M.ϕ, permeability = M.K)
-    model, parameters = setup_reservoir_model(domain, sys, wells = Is)
+    model, parameters = setup_reservoir_model(domain, sys, wells = Is; backend=:csr)
     select_output_variables!(model.models.Reservoir, :all)
     ρ = ConstantCompressibilityDensities(p_ref = 150*bar, density_ref = [ρCO2, ρH2O], compressibility = [1e-4/bar, 1e-6/bar])
     replace_variables!(model, PhaseMassDensities = ρ)

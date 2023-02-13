@@ -21,7 +21,7 @@ mkpath(plotsdir())
 ## grid size
 JLD2.@load datadir("BGCompass_tti_625m.jld2") m d;
 d = (6., 6.)
-m = m[:,181:end]
+m = m[200:450,181:end]
 h = 180 * d[end]
 v = Float64.(sqrt.(1f0./m));
 d = Float64.(d);
@@ -88,6 +88,7 @@ prj(x) = max.(min.(x,upper),lower)
 niterations = 100
 fhistory = zeros(niterations)
 fval = 0
+
 for j=1:niterations
 
     @time gs = gradient(Flux.params(logK0)) do

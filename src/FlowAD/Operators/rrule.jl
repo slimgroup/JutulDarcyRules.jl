@@ -49,5 +49,17 @@ function loss_per_step(m, state, dt, step_no, forces, states_ref)
     val2 = state[:Reservoir][fld2]
     ref = state_ref[:Reservoir][fld]
     ref2 = state_ref[:Reservoir][fld2]
-    return 0.5 * sum((val[1,:] - ref[1,:]).^2) + 0.5 * sum((val2-ref2).^2)
+    return inner_mismatch(val, ref, val2, ref2)
+end
+
+function inner_mismatch(val, ref, val2, ref2)
+    mismatch_s = zero(eltype(val))
+    for i in axes(val, 2)
+        mismatch_s += (val[1,i] - ref[1,i])^2
+    end
+    mismatch_p = zero(eltype(val2))
+    for i in eachindex(val2)
+        mismatch_p += (val2[i] - ref2[i])^2
+    end
+    return eltype(val)(0.5) * mismatch_s + eltype(val2)(0.5) * mismatch_p
 end
