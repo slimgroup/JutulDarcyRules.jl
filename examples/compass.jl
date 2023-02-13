@@ -20,6 +20,9 @@ mkpath(plotsdir())
 
 ## grid size
 JLD2.@load datadir("BGCompass_tti_625m.jld2") m d;
+d = (6., 6.)
+m = m[:,181:end]
+h = 180 * d[end]
 v = Float64.(sqrt.(1f0./m));
 d = Float64.(d);
 function VtoK(v::Matrix{T}, d::Tuple{T, T}; α::T=T(20)) where T
@@ -40,17 +43,17 @@ end
 Kh = VtoK(v, d);
 K = Float64.(Kh * md);
 n = (size(K,1), 1, size(K,2))
-d = (d[1], 1000.0, d[2])
+d = (d[1], 2000.0, d[2])
 
 ϕ = 0.25
-model = jutulModel(n, d, ϕ, K1to3(K))
+model = jutulModel(n, d, ϕ, K1to3(K; kvoverkh=0.36); h=h)
 
 ## simulation time steppings
-tstep = 160 * ones(50)
+tstep = 320 * ones(25)
 tot_time = sum(tstep)
 
 ## injection & production
-inj_loc = (Int(round(n[1]/2)), 1, n[end]-60) .* d
+inj_loc = (Int(round(n[1]/2)), 1, n[end]-20) .* d
 irate = 0.3
 q = jutulForce(irate, [inj_loc])
 
@@ -68,9 +71,9 @@ logK = log.(K)
 ## plotting
 fig=figure(figsize=(20,12));
 subplot(1,2,1);
-imshow(reshape(Saturations(state.states[25]), n[1], n[end])'); colorbar(); title("saturation")
+imshow(reshape(Saturations(state.states[end]), n[1], n[end])'); colorbar(); title("saturation")
 subplot(1,2,2);
-imshow(reshape(Pressure(state.states[25]), n[1], n[end])'); colorbar(); title("pressure")
+imshow(reshape(Pressure(state.states[end]), n[1], n[end])'); colorbar(); title("pressure")
 
 #### inversion
 logK0 = deepcopy(logK)

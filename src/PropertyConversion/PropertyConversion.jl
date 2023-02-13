@@ -1,6 +1,6 @@
 export TransToK, KtoTrans, K1to3
 
-K1to3(Kx::AbstractArray{T}) where T = vcat(vec(Kx)', vec(Kx)', vec(Kx)')
+K1to3(Kx::AbstractArray{T}; kvoverkh::T=T(1)) where T = vcat(vec(Kx)', vec(Kx)', kvoverkh * vec(Kx)')
 
 function TransToK(g::CartesianMesh, Trans::AbstractVector{T}) where T<:Number
 

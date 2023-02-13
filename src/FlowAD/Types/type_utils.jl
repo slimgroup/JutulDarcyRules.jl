@@ -38,8 +38,8 @@ function setup_well_model(M::jutulModel{D, T}, f::jutulForce{D, T}, tstep::Vecto
 
     ### initial state
     Z = repeat((1:M.n[end])*M.d[end], inner = prod(M.n[1:2]))
-    p0 = ρH2O * g * Z # rho * g * h
-    state0 = setup_reservoir_state(model, Pressure = 150*bar, Saturations = [0.0, 1.0])
+    p0 = ρH2O * g * (Z .+ M.h) # rho * g * h
+    state0 = setup_reservoir_state(model, Pressure = p0, Saturations = [0.0, 1.0])
 
     return model, parameters, state0, forces
 end
