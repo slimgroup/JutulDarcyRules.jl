@@ -62,7 +62,7 @@ S = jutulModeling(model, tstep)
 
 ## simulation
 mesh = CartesianMesh(model)
-T(x) = log.(KtoTrans(mesh, K1to3(exp.(x))))
+T(x) = log.(KtoTrans(mesh, K1to3(exp.(x); kvoverkh=0.36)))
 
 logK = log.(K)
 

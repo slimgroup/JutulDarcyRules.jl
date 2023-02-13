@@ -21,7 +21,7 @@ function jutulModel(n::NTuple{D, Int64}, d::NTuple{D, T}, ϕ::T, K::Union{Matrix
 end
 
 display(M::jutulModel{D, T}) where {D, T} =
-    println("$(D)D jutulModel with size $(M.n) and grid spacing $(M.d) at depth $h m")
+    println("$(D)D jutulModel with size $(M.n) and grid spacing $(M.d) at depth $(M.h) m")
 
 CartesianMesh(M::jutulModel{D, T}) where {D, T} = CartesianMesh(M.n, M.d .* M.n)
 
