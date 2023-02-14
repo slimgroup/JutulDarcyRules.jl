@@ -105,6 +105,7 @@ for j=1:niterations
 
     @time gs = gradient(Flux.params(logK0)) do
         global fval = f(logK0)
+        return fval
     end
     g = gs[logK0]
     p = -g/norm(g, Inf)
