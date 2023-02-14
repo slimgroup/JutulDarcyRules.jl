@@ -24,7 +24,19 @@ d = (6., 6.)
 m = m[200:450,181:end]
 h = 180 * d[end]
 v = Float64.(sqrt.(1f0./m));
-d = Float64.(d);
+function downsample(v::Matrix{T}, factor::Int) where T
+    v_out_size = div.(size(v), factor)
+    v_out = zeros(T, v_out_size)
+    for i = 1:v_out_size[1]
+        for j = 1:v_out_size[2]
+            v_out[i,j] = mean(v[factor*i-factor+1:factor*i, factor*j-factor+1:factor*j])
+        end
+    end
+    return v_out
+end
+factor = 2
+v = 1.0./downsample(1.0./v, factor)
+d = Float64.(d) .* factor;
 function VtoK(v::Matrix{T}, d::Tuple{T, T}; α::T=T(20)) where T
 
     n = size(v)
@@ -49,7 +61,7 @@ d = (d[1], 2000.0, d[2])
 model = jutulModel(n, d, ϕ, K1to3(K; kvoverkh=0.36); h=h)
 
 ## simulation time steppings
-tstep = 320 * ones(25)
+tstep = 365.25 * ones(15)
 tot_time = sum(tstep)
 
 ## injection & production
