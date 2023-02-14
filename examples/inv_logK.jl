@@ -63,15 +63,12 @@ fhistory = zeros(niterations)
 
 for j=1:niterations
 
-    @time gs = gradient(Flux.params(logK0)) do
-        global loss = f(logK0)
-        return loss
-    end
+    @time fval, gs = Flux.withgradient(() -> f(logK0), Flux.params(logK0))
     g = gs[logK0]
     p = -g/norm(g, Inf)
     
-    println("Inversion iteration no: ",j,"; function value: ", loss)
-    fhistory[j] = loss
+    println("Inversion iteration no: ",j,"; function value: ", fval)
+    fhistory[j] = fval
 
     # linesearch
     function f_(α)
@@ -80,7 +77,7 @@ for j=1:niterations
         return misfit
     end
 
-    step, loss = ls(f_, 1e-1, loss, dot(g, p))
+    step, fval = ls(f_, 1e-1, fval, dot(g, p))
 
     # Update model and bound projection
     global logK0 = prj(logK0 .+ step .* p)
