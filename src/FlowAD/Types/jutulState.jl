@@ -85,6 +85,8 @@ function setindex!(states::jutulStates{T}, v, i::Int) where T
     end
 end
 
+getindex(state::jutulAllState, i...) = getindex(vec(state), i...)
+
 firstindex(A::jutulAllState) = 1
 lastindex(A::jutulAllState) = length(A)
 
