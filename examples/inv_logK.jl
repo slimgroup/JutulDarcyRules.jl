@@ -88,7 +88,7 @@ state0 = S(T(logK0), q)
 K0 = exp.(logK0)
 K_init = exp.(logK_init)
 
-fig_name = @strdict n d ϕ tstep irate niterations lower upper inj_loc prod_loc
+fig_name = @strdict n d ϕ tstep irate niterations lower upper inj_loc
 
 fig=figure(figsize=(20,12));
 subplot(1,3,1);
@@ -103,22 +103,22 @@ close(fig)
 
 fig=figure(figsize=(20,12));
 subplot(1,3,1);
-imshow(reshape(state_init.states[end].Saturations, n[1], n[end])', vmin=0, vmax=1); colorbar(); title("initial saturation")
+imshow(reshape(Saturations(state_init.states[end]), n[1], n[end])', vmin=0, vmax=1); colorbar(); title("initial saturation")
 subplot(1,3,2);
-imshow(reshape(state0.states[end].Saturations, n[1], n[end])', vmin=0, vmax=1); colorbar(); title("inverted saturation")
+imshow(reshape(Saturations(state0.states[end]), n[1], n[end])', vmin=0, vmax=1); colorbar(); title("inverted saturation")
 subplot(1,3,3);
-imshow(reshape(state.states[end].Saturations, n[1], n[end])', vmin=0, vmax=1); colorbar(); title("true saturation")
+imshow(reshape(Saturations(state.states[end]), n[1], n[end])', vmin=0, vmax=1); colorbar(); title("true saturation")
 tight_layout()
 safesave(joinpath(plotsdir(sim_name, exp_name), savename(fig_name; digits=6)*"_saturation.png"), fig);
 close(fig)
 
 fig=figure(figsize=(20,12));
 subplot(1,3,1);
-imshow(reshape(state_init.states[end].Pressure, n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("initial pressure")
+imshow(reshape(Pressure(state_init.states[end]), n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("initial pressure")
 subplot(1,3,2);
-imshow(reshape(state0.states[end].Pressure, n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("inverted pressure")
+imshow(reshape(Pressure(state0.states[end]), n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("inverted pressure")
 subplot(1,3,3);
-imshow(reshape(state.states[end].Pressure, n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("true pressure")
+imshow(reshape(Pressure(state.states[end]), n[1], n[end])', vmin=minimum(state.states[end].Pressure), vmax=maximum(state.states[end].Pressure)); colorbar(); title("true pressure")
 tight_layout()
 safesave(joinpath(plotsdir(sim_name, exp_name), savename(fig_name; digits=6)*"_pressure.png"), fig);
 close(fig)
