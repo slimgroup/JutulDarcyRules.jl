@@ -33,7 +33,7 @@ tstep = 40 * ones(50)
 tot_time = sum(tstep)
 
 ## injection & production
-inj_loc = (3, 1, 9) .* d
+inj_loc = (15, 1, 9) .* d
 irate = 5e-3
 q = jutulForce(irate, [inj_loc])
 

@@ -123,7 +123,7 @@ end
 ==(A::jutulAllState{T}, B::jutulAllState{T}) where {T} = vec(A) == vec(B)
 
 function check_valid_state(states::jutulState{T}) where T
-    @assert all(sum(states.state[:Reservoir][:Saturations], dims=1) .== 1)
+    @assert all(isapprox.(sum(states.state[:Reservoir][:Saturations], dims=1),1; rtol=sqrt(eps(T))))
 end
 
 function check_valid_state(states::jutulStates{T}) where T
