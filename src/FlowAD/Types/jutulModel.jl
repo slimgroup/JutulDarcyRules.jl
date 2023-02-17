@@ -13,7 +13,7 @@ function jutulModel(n::NTuple{D, Int64}, d::NTuple{D, T}, ϕ::T, K::Union{Matrix
     if pad
         ϕ_full[1,:,:] .= 1e8
         ϕ_full[end,:,:] .= 1e8
-        ϕ_full[:,:,1] .= 1e8
+        ϕ_full[:,:,1] .= ϕ * (h/d[end] + T(1))
         ϕ_full[:,:,end] .= 1e8
     end
     ϕ = vec(ϕ_full)
