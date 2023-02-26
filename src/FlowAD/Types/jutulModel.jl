@@ -20,6 +20,8 @@ function jutulModel(n::NTuple{D, Int64}, d::NTuple{D, T}, ϕ::T, K::Union{Matrix
     return jutulModel(n, d, ϕ, K, h)
 end
 
+jutulModel(n::NTuple{D, Int64}, d::NTuple{D, T}, ϕ::Vector{T}, K::Union{Matrix{T}, T}) where {D, T} = jutulModel(n, d, ϕ, K, T(0))
+
 display(M::jutulModel{D, T}) where {D, T} =
     println("$(D)D jutulModel with size $(M.n) and grid spacing $(M.d) at depth $(M.h) m")
 
