@@ -33,7 +33,7 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
         states_ref = dict(states_ref_)
         mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step(m, state, dt, step_no, forces, states_ref)
         F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(
-            model, state0, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config);
+            model, state0, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config, use_sparsity = false);
         g = similar(x0);
         misfit = F_and_dF(F_o, g, x0);
         return NoTangent(), g[1:length(LogTransmissibilities)], NoTangent()
