@@ -20,7 +20,7 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
 
     ### simulation
     sim, config = setup_reservoir_simulator(model, state0, parameters);
-    states, report = simulate!(sim, tstep, forces = forces, config = config, max_timestep_cuts = 1000, info_level=info_level);
+    states, reports = simulate!(sim, tstep, forces = forces, config = config, max_timestep_cuts = 1000, info_level=info_level);
     output = jutulStates(states)
     
     ### optimization framework
@@ -33,9 +33,8 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
         states_ref = dict(states_ref_)
         mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step(m, state, dt, step_no, forces, states_ref)
         F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(
-            model, state0, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config, use_sparsity = false);
-        g = similar(x0);
-        misfit = F_and_dF(F_o, g, x0);
+            states, reports, model, state0, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config, use_sparsity = false);
+        g = dF_o(similar(x0), x0);
         return NoTangent(), g[1:length(LogTransmissibilities)], NoTangent()
     end
     return output, pullback
@@ -62,4 +61,92 @@ function inner_mismatch(val, ref, val2, ref2)
         mismatch_p += (val2[i] - ref2[i])^2
     end
     return eltype(val)(0.5) * mismatch_s + eltype(val2)(0.5) * mismatch_p
+end
+
+function setup_parameter_optimization(precomputed_states, reports, model, state0, param, dt, forces, G, arg...; kwarg...)
+    case = JutulCase(model, dt, forces, state0 = state0, parameters = param)
+    return setup_parameter_optimization(precomputed_states, reports, case, G, arg...; kwarg...)
+end
+
+function setup_parameter_optimization(precomputed_states, reports, case::JutulCase, G, opt_cfg = optimization_config(case.model, case.parameters);
+                                                            grad_type = :adjoint,
+                                                            config = nothing,
+                                                            print = 1,
+                                                            copy_case = true,
+                                                            param_obj = false,
+                                                            use_sparsity = true,
+                                                            kwarg...)
+    if copy_case
+        case = Jutul.duplicate(case)
+    end
+    # Pick active set of targets from the optimization config and construct a mapper
+    (; model, state0, parameters) = case
+    if print isa Bool
+        if print
+            print = 1
+        else
+            print = Inf
+        end
+    end
+    verbose = print > 0 && isfinite(print)
+    targets = Jutul.optimization_targets(opt_cfg, model)
+    if grad_type == :numeric
+        @assert length(targets) == 1
+        @assert model isa SimulationModel
+    else
+        @assert grad_type == :adjoint
+    end
+    mapper, = Jutul.variable_mapper(model, :parameters, targets = targets, config = opt_cfg)
+    lims = Jutul.optimization_limits(opt_cfg, mapper, parameters, model)
+    if verbose
+        Jutul.print_parameter_optimization_config(targets, opt_cfg, model)
+    end
+    x0 = Jutul.vectorize_variables(model, parameters, mapper, config = opt_cfg)
+    for k in eachindex(x0)
+        low = lims[1][k]
+        high = lims[2][k]
+        @assert low <= x0[k] "Computed lower limit $low for parameter #$k was larger than provided x0[k]=$(x0[k])"
+        @assert high >= x0[k] "Computer upper limit $hi for parameter #$k was smaller than provided x0[k]=$(x0[k])"
+    end
+    data = Dict()
+    data[:n_objective] = 1
+    data[:n_gradient] = 1
+    data[:obj_hist] = zeros(0)
+
+    sim = Jutul.Simulator(case)
+    if isnothing(config)
+        config = Jutul.simulator_config(sim; info_level = -1, kwarg...)
+    elseif !verbose
+        config[:info_level] = -1
+        config[:end_report] = false
+    end
+    data[:sim] = sim
+    data[:sim_config] = config
+
+    if grad_type == :adjoint
+        adj_storage = Jutul.setup_adjoint_storage(model, state0 = state0,
+                                                   parameters = parameters,
+                                                   targets = targets,
+                                                   use_sparsity = use_sparsity,
+                                                   param_obj = param_obj)
+        data[:adjoint_storage] = adj_storage
+        grad_adj = zeros(adj_storage.n)
+    else
+        grad_adj = similar(x0)
+    end
+    data[:case] = case
+    data[:grad_adj] = grad_adj
+    data[:mapper] = mapper
+    data[:G] = G
+    data[:targets] = targets
+    data[:mapper] = mapper
+    data[:config] = opt_cfg
+    data[:last_obj] = Inf
+    data[:x_hash] = hash(x0)
+    data[:states] = precomputed_states
+    data[:reports] = reports
+    F = x -> Jutul.objective_opt!(x, data, print)
+    dF = (dFdx, x) -> Jutul.gradient_opt!(dFdx, x, data)
+    F_and_dF = (F, dFdx, x) -> Jutul.objective_and_gradient_opt!(F, dFdx, x, data, print)
+    return (F! = F, dF! = dF, F_and_dF! = F_and_dF, x0 = x0, limits = lims, data = data)
 end
