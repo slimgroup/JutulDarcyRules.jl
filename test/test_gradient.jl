@@ -13,7 +13,7 @@ misfit(x0) = 0.5 * norm(S(x0, q) - states).^2
 g = gradient(()->misfit(x0), Flux.params(x0))
 
 dx = randn(MersenneTwister(2023), length(x0))
-dx = dx/norm(dx) * norm(x0)/6.0
+dx = dx/norm(dx) * norm(x0)/5.0
 
 @testset "Taylor-series gradient test of jutulModeling" begin
     grad_test(misfit, x0, dx, g[x0])
