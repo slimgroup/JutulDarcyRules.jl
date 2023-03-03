@@ -22,14 +22,10 @@ function (S::jutulModeling{D, T})(LogTransmissibilities::AbstractVector{T}, f::j
     model.models.Reservoir.domain.grid.trans .= Transmissibilities
     parameters[:Reservoir][:Transmissibilities] = Transmissibilities
 
-    if isnothing(state0)
-        state0 = state0_
-    else
-        state0 = dict(state0)
-    end
+    isnothing(state0) || (state0_[:Reservoir] = get_Reservoir_state(state0))
 
     ### simulation
-    sim, config = setup_reservoir_simulator(model, state0, parameters);
+    sim, config = setup_reservoir_simulator(model, state0_, parameters);
     states, report = simulate!(sim, tstep, forces = forces, config = config, max_timestep_cuts = 1000, info_level=info_level);
     output = jutulStates(states)
     return output
