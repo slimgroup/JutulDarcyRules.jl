@@ -2,7 +2,6 @@ using Test
 using Jutul
 using JutulDarcyAD
 using Flux
-using MultiComponentFlash
 using Printf
 using Random
 using LinearAlgebra
