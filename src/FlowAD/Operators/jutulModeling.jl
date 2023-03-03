@@ -34,3 +34,20 @@ function (S::jutulModeling{D, T})(LogTransmissibilities::AbstractVector{T}, f::j
     output = jutulStates(states)
     return output
 end
+
+function (S::jutulModeling{D, T})(LogTransmissibilities::AbstractVector{T}, f::jutulSource{D, N};
+    state0::jutulSimpleState{T}=jutulSimpleState(S.model), visCO2::T=T(visCO2), visH2O::T=T(visH2O),
+    ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), info_level::Int64=-1) where {D, T, N}
+
+    Transmissibilities = exp.(LogTransmissibilities)
+
+    forces = source(S.model, f; ρCO2=ρCO2)
+
+    ### set up simulation time
+    tstep = day * S.tstep
+    model = simple_model(S.model; ρCO2=ρCO2, ρH2O=ρH2O)
+    model.domain.grid.trans .= Transmissibilities
+    parameters = setup_parameters(model, PhaseViscosities = [visCO2, visH2O]);
+    states, _ = simulate(dict(state0), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
+    return jutulSimpleStates(states)
+end

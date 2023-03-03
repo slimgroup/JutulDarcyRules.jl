@@ -1,5 +1,3 @@
-export setup_well_model
-
 function force(M::jutulModel{D, T}, w::jutulForce{D, T}, tstep::Vector{T};
     ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), g::T=T(10.0)) where {D, T}
 
@@ -42,4 +40,23 @@ function setup_well_model(M::jutulModel{D, T}, f::jutulForce{D, T}, tstep::Vecto
     state0 = setup_reservoir_state(model, Pressure = p0, Saturations = [0.0, 1.0])
 
     return model, parameters, state0, forces
+end
+
+function source(M::jutulModel{D, T}, f::jutulSource{D, T}; ρCO2::T=T(ρCO2)) where {D, T}
+    model = simple_model(M; ρCO2=ρCO2)
+    cell_loc = [Int.(round.(f.loc[i] ./ M.d)) for i = 1:length(f.loc)]
+    cell = [sum([(cell_loc[i][d]-1) * prod(M.n[1:d-1]) for d = length(cell_loc[i]):-1:1]) + 1 for i = 1:length(cell_loc)]
+    src  = [SourceTerm(cell[i], f.irate[i] * ρCO2, fractional_flow = [T(f.irate[i] > 0), T(1)-T(f.irate[i] > 0)]) for i = 1:length(f.loc)]
+    return setup_forces(model, sources = src)
+end
+
+function simple_model(M::jutulModel{D, T}; ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O)) where {D, T}
+    sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()))
+    g = CartesianMesh(M.n, M.d .* M.n)
+    G = discretized_domain_tpfv_flow(tpfv_geometry(g), porosity = M.ϕ, permeability = M.K)
+    model = SimulationModel(G, sys, output_level = :all)
+    ρ = ConstantCompressibilityDensities(p_ref = 100*bar, density_ref = [ρCO2, ρH2O], compressibility = [1e-4/bar, 1e-6/bar])
+    replace_variables!(model, PhaseMassDensities = ρ)
+    replace_variables!(model, RelativePermeabilities = BrooksCoreyRelPerm(sys, [2.0, 2.0], [0.1, 0.1], 1.0))
+    return model
 end

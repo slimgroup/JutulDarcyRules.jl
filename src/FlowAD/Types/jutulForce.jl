@@ -6,7 +6,8 @@ struct jutulForce{D, T}
     loc::Vector{NTuple{D, T}}
 end
 
-jutulForce(irate::T, loc::Vector{NTuple{D, T}}) where {D, T}= jutulForce(irate::T, vcat(:Injector, [:Producer for i = 1:length(loc)]), loc)
+jutulForce(irate::T, loc::NTuple{D, T}) where {D, T} = jutulForce(irate, [loc])
+jutulForce(irate::T, loc::Vector{NTuple{D, T}}) where {D, T}= jutulForce(irate, vcat(:Injector, [:Producer for i = 1:length(loc)]), loc)
 
 display(f::jutulForce{D, T}) where {D, T} =
     println("$(D)D jutulForce structure with $(length(f.loc)) injection/production wells and rate $(f.irate) m^3/s")

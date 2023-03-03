@@ -40,6 +40,55 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
     return output, pullback
 end
 
+function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, f::jutulSource{D, N};
+    state0::jutulSimpleState{T}=jutulSimpleState(S.model), visCO2::T=T(visCO2), visH2O::T=T(visH2O),
+    ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), info_level::Int64=-1) where {D, T, N}
+    
+    Transmissibilities = exp.(LogTransmissibilities)
+
+    forces = source(S.model, f; ρCO2=ρCO2)
+
+    ### set up simulation time
+    tstep = day * S.tstep
+    model = simple_model(S.model; ρCO2=ρCO2, ρH2O=ρH2O)
+    model.domain.grid.trans .= Transmissibilities
+    parameters = setup_parameters(model, PhaseViscosities = [visCO2, visH2O]);
+    states, reports = simulate(dict(state0), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
+    output = jutulSimpleStates(states)
+    cfg = optimization_config(model, parameters, use_scaling = true, rel_min = 0.1, rel_max = 10)
+    for (ki, vi) in cfg
+        if ki in [:TwoPointGravityDifference, :PhaseViscosities]
+            vi[:active] = false
+        end
+        if ki == :Transmissibilities
+            vi[:scaler] = :log
+        end
+    end
+    cfg[:Transmissibilities][:use_scaling] = false
+
+    function pullback(dy)
+        states_dy = output(dy)
+        states_ref = dict(output-states_dy)
+        function mass_mismatch(m, state, dt, step_no, forces)
+            state_ref = states_ref[step_no]
+            fld = :Saturations
+            fld2 = :Pressure
+            val = state[fld]
+            val2 = state[fld2]
+            ref = state_ref[fld]
+            ref2 = state_ref[fld2]
+            return 0.5 * sum((val[1,:] - ref[1,:]).^2) + 0.5 * sum((val2-ref2).^2)
+        end
+        mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step_simple(m, state, dt, step_no, forces, states_ref)
+        Jutul.evaluate_objective(mass_mismatch, model, states_ref, tstep, forces)
+        F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(states, reports, model,
+        dict(state0), parameters, tstep, forces, mass_mismatch, cfg, print = -1, param_obj = true);
+        g = dF_o(similar(x0), x0);
+        return NoTangent(), g[1:length(LogTransmissibilities)], NoTangent()
+    end
+    return output, pullback
+end
+
 function loss_per_step(m, state, dt, step_no, forces, states_ref)
     state_ref = states_ref[step_no]
     fld = :Saturations
@@ -48,6 +97,17 @@ function loss_per_step(m, state, dt, step_no, forces, states_ref)
     val2 = state[:Reservoir][fld2]
     ref = state_ref[:Reservoir][fld]
     ref2 = state_ref[:Reservoir][fld2]
+    return inner_mismatch(val, ref, val2, ref2)
+end
+
+function loss_per_step_simple(m, state, dt, step_no, forces, states_ref)
+    state_ref = states_ref[step_no]
+    fld = :Saturations
+    fld2 = :Pressure
+    val = state[fld]
+    val2 = state[fld2]
+    ref = state_ref[fld]
+    ref2 = state_ref[fld2]
     return inner_mismatch(val, ref, val2, ref2)
 end
 
@@ -89,19 +149,19 @@ function setup_parameter_optimization(precomputed_states, reports, case::JutulCa
         end
     end
     verbose = print > 0 && isfinite(print)
-    targets = Jutul.optimization_targets(opt_cfg, model)
+    targets = optimization_targets(opt_cfg, model)
     if grad_type == :numeric
         @assert length(targets) == 1
         @assert model isa SimulationModel
     else
         @assert grad_type == :adjoint
     end
-    mapper, = Jutul.variable_mapper(model, :parameters, targets = targets, config = opt_cfg)
-    lims = Jutul.optimization_limits(opt_cfg, mapper, parameters, model)
+    mapper, = variable_mapper(model, :parameters, targets = targets, config = opt_cfg)
+    lims = optimization_limits(opt_cfg, mapper, parameters, model)
     if verbose
-        Jutul.print_parameter_optimization_config(targets, opt_cfg, model)
+        print_parameter_optimization_config(targets, opt_cfg, model)
     end
-    x0 = Jutul.vectorize_variables(model, parameters, mapper, config = opt_cfg)
+    x0 = vectorize_variables(model, parameters, mapper, config = opt_cfg)
     for k in eachindex(x0)
         low = lims[1][k]
         high = lims[2][k]
@@ -113,9 +173,9 @@ function setup_parameter_optimization(precomputed_states, reports, case::JutulCa
     data[:n_gradient] = 1
     data[:obj_hist] = zeros(0)
 
-    sim = Jutul.Simulator(case)
+    sim = Simulator(case)
     if isnothing(config)
-        config = Jutul.simulator_config(sim; info_level = -1, kwarg...)
+        config = simulator_config(sim; info_level = -1, kwarg...)
     elseif !verbose
         config[:info_level] = -1
         config[:end_report] = false
@@ -124,7 +184,7 @@ function setup_parameter_optimization(precomputed_states, reports, case::JutulCa
     data[:sim_config] = config
 
     if grad_type == :adjoint
-        adj_storage = Jutul.setup_adjoint_storage(model, state0 = state0,
+        adj_storage = setup_adjoint_storage(model, state0 = state0,
                                                    parameters = parameters,
                                                    targets = targets,
                                                    use_sparsity = use_sparsity,
@@ -145,8 +205,8 @@ function setup_parameter_optimization(precomputed_states, reports, case::JutulCa
     data[:x_hash] = hash(x0)
     data[:states] = precomputed_states
     data[:reports] = reports
-    F = x -> Jutul.objective_opt!(x, data, print)
-    dF = (dFdx, x) -> Jutul.gradient_opt!(dFdx, x, data)
-    F_and_dF = (F, dFdx, x) -> Jutul.objective_and_gradient_opt!(F, dFdx, x, data, print)
+    F = x -> objective_opt!(x, data, print)
+    dF = (dFdx, x) -> gradient_opt!(dFdx, x, data)
+    F_and_dF = (F, dFdx, x) -> objective_and_gradient_opt!(F, dFdx, x, data, print)
     return (F! = F, dF! = dF, F_and_dF! = F_and_dF, x0 = x0, limits = lims, data = data)
 end

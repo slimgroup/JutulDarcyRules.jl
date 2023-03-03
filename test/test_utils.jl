@@ -16,11 +16,13 @@ function test_config()
 
     ## injection & production
     inj_loc = (15, 1, 10) .* d
+    prod_loc = (30, 1, 10) .* d
     irate = 5e-3
     q = jutulForce(irate, [inj_loc])
-    state0 = jutulState(setup_well_model(model, q, tstep)[3])
-
-    return model, model0, q, state0, tstep
+    q1 = jutulSource(irate, [inj_loc, prod_loc])
+    state0 = jutulState(JutulDarcyAD.setup_well_model(model, q, tstep)[3])
+    state1 = jutulSimpleState(model)
+    return model, model0, q, q1, state0, state1, tstep
 end
 
 mean(x) = sum(x)/length(x)

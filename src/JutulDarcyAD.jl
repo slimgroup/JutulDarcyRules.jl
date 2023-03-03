@@ -12,6 +12,8 @@ module JutulDarcyAD
     using ChainRulesCore
     import Jutul: JutulGeometry, get_facepos, compute_face_trans, compute_half_face_trans, expand_perm
     import Jutul: SimulationModel, select_output_variables!
+    import Jutul: optimization_targets, variable_mapper, optimization_limits, print_parameter_optimization_config
+    import Jutul: objective_opt!, gradient_opt!, objective_and_gradient_opt!
     import Base: +, -, *, /, ==
     import Base: display, length, size, getindex, setindex!, IndexStyle, vec, firstindex, lastindex
     import LinearAlgebra: norm, dot
