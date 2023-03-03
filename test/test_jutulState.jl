@@ -1,4 +1,4 @@
-model, init_state = setup_model_state()
+model, model0, q, q1, init_state, init_state_simple, tstep = test_config();
 
 @testset "Test jutulState" begin
     @info "length, size"
@@ -18,4 +18,12 @@ model, init_state = setup_model_state()
     @test init_state1 != init_state
     init_state[1] = 0.2
     @test init_state1 == init_state
+
+    @info "test dict"
+    dict(init_state) == init_state.state
+
+    @info "test translation"
+    half_init_state = init_state(vec(init_state) ./ 2)
+    JutulDarcyAD.check_valid_state(half_init_state)
+    @test vec(half_init_state) == 0.5 * vec(init_state)
 end

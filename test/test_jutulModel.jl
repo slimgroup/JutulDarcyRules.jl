@@ -5,13 +5,13 @@
     d = 10 .* (rand(), rand(), rand())
     K = 200 * rand() * md * ones(n)
     ϕ = rand()
-    model = jutulModel(n, d, ϕ, K1to3(K))
+    model = jutulModel(n, d, ϕ, K1to3(K); pad=false)
 
     @test model.n == n
     @test model.d == d
-    @test model.ϕ == ϕ
+    @test all(model.ϕ .== ϕ)
     @test model.K == K1to3(K)
 
-    model1 = jutulModel(n, d, ϕ, K1to3(K))
+    model1 = jutulModel(n, d, ϕ, K1to3(K); pad=false)
     @test model1 == model
 end

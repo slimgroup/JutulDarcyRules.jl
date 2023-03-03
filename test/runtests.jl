@@ -2,7 +2,6 @@ using Test
 using Jutul
 using JutulDarcyAD
 using Flux
-using MultiComponentFlash
 using Printf
 using Random
 using LinearAlgebra
@@ -17,5 +16,6 @@ include("test_conversion.jl")
 
 include("test_jutulState.jl")
 include("test_jutulForce.jl")
+include("test_jutulSource.jl")
 include("test_jutulModel.jl")
 include("test_jutulModeling.jl")
