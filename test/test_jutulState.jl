@@ -1,4 +1,4 @@
-model, model0, q, q1, init_state, init_state_simple, tstep = test_config();
+model, model0, q, q1, q2, init_state, init_state_simple, tstep = test_config();
 
 @testset "Test jutulState" begin
     @info "length, size"

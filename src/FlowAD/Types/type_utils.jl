@@ -2,9 +2,9 @@ function force(M::jutulModel{D, T}, w::jutulForce{D, T}, tstep::Vector{T};
     ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), g::T=T(10.0)) where {D, T}
 
     ## set up well information
-    cell_loc = [Int.(round.(w.loc[i] ./ M.d)) for i = 1:length(w.loc)]
+    cell_loc = [Int.(round.(w.loc[i] ./ M.d[1:length(w.loc[1])])) for i = 1:length(w.loc)]
     Is = [setup_well(CartesianMesh(M), M.K, [cell_loc[i]], name = w.name[i]) for i = 1:length(w.loc)]
-    ctrls = [w.name[i]==:Injector ? InjectorControl(TotalRateTarget(w.irate), [1.0, 0.0], density = ρCO2) : ProducerControl(BottomHolePressureTarget(2.0 * ρH2O * g * w.loc[i][3])) for i = 1:length(w.loc)]
+    ctrls = [w.name[i]==:Injector ? InjectorControl(TotalRateTarget(w.irate), [1.0, 0.0], density = ρCO2) : ProducerControl(BottomHolePressureTarget(50*bar)) for i = 1:length(w.loc)]
     controls = Dict()
     for i = 1:length(w.loc)
         controls[w.name[i]] = ctrls[i]
@@ -12,7 +12,23 @@ function force(M::jutulModel{D, T}, w::jutulForce{D, T}, tstep::Vector{T};
     return Is, controls
 end
 
-function setup_well_model(M::jutulModel{D, T}, f::jutulForce{D, T}, tstep::Vector{T};
+function force(M::jutulModel{D, T}, w::jutulVWell{D, T}, tstep::Vector{T};
+    ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), g::T=T(10.0)) where {D, T}
+
+    ## set up well information
+    cell_loc = [Int.(round.(w.loc[i] ./ M.d[1:length(w.loc[1])])) for i = 1:length(w.loc)]
+    heel = [isnothing(w.startz) ? 1 : Int(div(w.startz[i], M.d[end])) for i = 1:length(w.loc)]
+    toe = [isnothing(w.endz) ? M.n[end] : Int(div(w.endz[i], M.d[end])) for i = 1:length(w.loc)]
+    Is = [setup_vertical_well(CartesianMesh(M), M.K, cell_loc[i]..., name = w.name[i]; heel = heel[i], toe = toe[i]) for i = 1:length(w.loc)]
+    ctrls = [w.name[i]==:Injector ? InjectorControl(TotalRateTarget(w.irate), [1.0, 0.0], density = ρCO2) : ProducerControl(BottomHolePressureTarget(50*bar)) for i = 1:length(w.loc)]
+    controls = Dict()
+    for i = 1:length(w.loc)
+        controls[w.name[i]] = ctrls[i]
+    end
+    return Is, controls
+end
+
+function setup_well_model(M::jutulModel{D, T}, f::Union{jutulForce{D, T}, jutulVWell{D, T}}, tstep::Vector{T};
     visCO2::T=T(visCO2), visH2O::T=T(visH2O), ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), g::T=T(10.0)) where {D, T}
 
     ### set up well controls

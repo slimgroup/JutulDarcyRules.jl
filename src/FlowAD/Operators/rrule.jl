@@ -1,4 +1,4 @@
-function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, f::jutulForce{D, N};
+function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, f::Union{jutulForce{D, N}, jutulVWell{D, N}};
     state0=nothing, visCO2::T=T(visCO2), visH2O::T=T(visH2O),
     ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), info_level::Int64=-1) where {D, T, N}
     
