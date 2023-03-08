@@ -35,6 +35,10 @@ Pressure(state::jutulSimpleState) = state.state[:Pressure]
 Saturations(state::jutulSimpleOrMultiModelStates) = vcat([Saturations(state.states[i]) for i = 1:get_nt(state)]...)
 Pressure(state::jutulSimpleOrMultiModelStates) = vcat([Pressure(state.states[i]) for i = 1:get_nt(state)]...)
 
+get_Reservoir_state(state::jutulState) = state.state[:Reservoir]
+get_Reservoir_state(state::jutulSimpleState) = state.state
+get_Reservoir_state(state::jutulSimpleOrMultiModelStates) = get_Reservoir_state(state.states[end])
+
 get_nt(state::jutulSimpleOrMultiModelStates) = length(state.states)
 get_nn(state::jutulSimpleOrMultiModelState) = length(Saturations(state))
 get_nn(state::jutulSimpleOrMultiModelStates) = get_nn(state.states[1])
