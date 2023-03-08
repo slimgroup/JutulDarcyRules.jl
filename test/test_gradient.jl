@@ -1,4 +1,4 @@
-model, model0, q, q1, init_state, init_state1, tstep = test_config();
+model, model0, q, q1, q2, state0, state1, tstep = test_config();
 
 ## set up modeling operator
 S = jutulModeling(model0, tstep)
@@ -26,4 +26,13 @@ g1 = gradient(()->misfit1(x0), Flux.params(x0))
 
 @testset "Taylor-series gradient test of simple jutulModeling" begin
     grad_test(misfit1, x0, dx/1.5, g1[x0])
+end
+
+states2 = S(x, q2)
+
+misfit2(x0) = 0.5 * norm(S(x0, q2) - states2).^2
+g2 = gradient(()->misfit2(x0), Flux.params(x0))
+
+@testset "Taylor-series gradient test of jutulModeling with vertical wells" begin
+    grad_test(misfit2, x0, dx/1.5, g2[x0])
 end
