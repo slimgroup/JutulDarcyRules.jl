@@ -24,6 +24,6 @@ model, model0, q, q1, q2, init_state, init_state_simple, tstep = test_config();
 
     @info "test translation"
     half_init_state = init_state(vec(init_state) ./ 2)
-    JutulDarcyAD.check_valid_state(half_init_state)
+    JutulDarcyRules.check_valid_state(half_init_state)
     @test vec(half_init_state) == 0.5 * vec(init_state)
 end
