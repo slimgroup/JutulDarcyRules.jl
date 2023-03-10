@@ -21,7 +21,7 @@ function test_config()
     q = jutulForce(irate, inj_loc)
     q1 = jutulSource(irate, [inj_loc, prod_loc])
     q2 = jutulVWell(irate, inj_loc[1:2]; startz = 9 * d[3], endz = 11 * d[3])
-    state0 = jutulState(JutulDarcyAD.setup_well_model(model, q, tstep)[3])
+    state0 = jutulState(JutulDarcyRules.setup_well_model(model, q, tstep)[3])
     state1 = jutulSimpleState(model)
     return model, model0, q, q1, q2, state0, state1, tstep
 end

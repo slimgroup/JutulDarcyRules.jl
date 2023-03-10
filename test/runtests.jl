@@ -1,6 +1,6 @@
 using Test
 using Jutul
-using JutulDarcyAD
+using JutulDarcyRules
 using Flux
 using Printf
 using Random

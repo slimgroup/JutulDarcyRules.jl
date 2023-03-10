@@ -11,7 +11,7 @@ x0 = log.(KtoTrans(CartesianMesh(model0), model0.K))
     states = S(x, q)
     for i = 1:length(states.states)
         exist_co2 = sum(Saturations(states.states[i]) .* states.states[i].state[:Reservoir][:PhaseMassDensities][1,:] .* model.ϕ) * prod(model.d)
-        inj_co2 = JutulDarcyAD.ρCO2 * q.irate * JutulDarcyAD.day * sum(tstep[1:i])
+        inj_co2 = JutulDarcyRules.ρCO2 * q.irate * JutulDarcyRules.day * sum(tstep[1:i])
         @test isapprox(exist_co2, inj_co2) rtol=1e-3
     end
 end
@@ -20,7 +20,7 @@ end
     states = S(x, q1)
     for i = 1:length(states.states)
         exist_co2 = sum(Saturations(states.states[i]) .* states.states[i].state[:PhaseMassDensities][1,:] .* model.ϕ) * prod(model.d)
-        inj_co2 = JutulDarcyAD.ρCO2 * q.irate * JutulDarcyAD.day * sum(S.tstep[1:i])
+        inj_co2 = JutulDarcyRules.ρCO2 * q.irate * JutulDarcyRules.day * sum(S.tstep[1:i])
         @test isapprox(exist_co2, inj_co2) rtol=1e-3
     end
 end
@@ -33,7 +33,7 @@ end
     states_end = S(x, q2; state0=states)
     for i = 1:length(states_end.states)
         exist_co2 = sum(Saturations(states_end.states[i]) .* states_end.states[i].state[:Reservoir][:PhaseMassDensities][1,:] .* model.ϕ) * prod(model.d)
-        inj_co2 = JutulDarcyAD.ρCO2 * q2.irate * JutulDarcyAD.day * sum(S.tstep[1:i])
+        inj_co2 = JutulDarcyRules.ρCO2 * q2.irate * JutulDarcyRules.day * sum(S.tstep[1:i])
         @test isapprox(exist_co2-pre_co2, inj_co2) rtol=1e-3
     end
 end
@@ -42,7 +42,7 @@ end
     states = S(x, q2)
     for i = 1:length(states.states)
         exist_co2 = sum(Saturations(states.states[i]) .* states.states[i].state[:Reservoir][:PhaseMassDensities][1,:] .* model.ϕ) * prod(model.d)
-        inj_co2 = JutulDarcyAD.ρCO2 * q.irate * JutulDarcyAD.day * sum(tstep[1:i])
+        inj_co2 = JutulDarcyRules.ρCO2 * q.irate * JutulDarcyRules.day * sum(tstep[1:i])
         @test isapprox(exist_co2, inj_co2) rtol=1e-3
     end
 end
