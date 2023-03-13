@@ -1,9 +1,9 @@
 ## A simple 2D example for fluid-flow simulation
 
 using DrWatson
-@quickactivate "JutulDarcyAD-example"
+@quickactivate "JutulDarcyRules-example"
 
-using JutulDarcyAD
+using JutulDarcyRules
 using LinearAlgebra
 using PyPlot
 
@@ -52,6 +52,6 @@ subplot(1,2,2);
 imshow(reshape(Pressure(states0.states[end]), n[1], n[end])'); colorbar(); title("pressure")
 
 exist_co2 = sum(Saturations(states.states[end]) .* states.states[end].state[:Reservoir][:PhaseMassDensities][1,:] .* model.ϕ) * prod(model.d)
-inj_co2 = JutulDarcyAD.ρCO2 * q.irate * JutulDarcyAD.day * sum(tstep)
+inj_co2 = JutulDarcyRules.ρCO2 * q.irate * JutulDarcyRules.day * sum(tstep)
 
 norm(exist_co2-inj_co2)/norm(exist_co2+inj_co2)

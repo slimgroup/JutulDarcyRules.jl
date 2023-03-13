@@ -1,9 +1,9 @@
 ## A simple 2D example for permeability inversion
 
 using DrWatson
-@quickactivate "JutulDarcyAD-example"
+@quickactivate "JutulDarcyRules-example"
 
-using JutulDarcyAD
+using JutulDarcyRules
 using LinearAlgebra
 using PyPlot
 using Flux

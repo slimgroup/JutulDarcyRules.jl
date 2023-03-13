@@ -1,4 +1,4 @@
-name: CI-JutulDarcyAD
+name: CI-JutulDarcyRules
 
 on: 
   # Trigger the workflow on push to main or pull request
@@ -29,7 +29,7 @@ jobs:
           - x64
 
     steps:
-      - name: Checkout JutulDarcyAD
+      - name: Checkout JutulDarcyRules
         uses: actions/checkout@v2
 
       - name: Setup julia

@@ -1,7 +1,7 @@
 using DrWatson
-@quickactivate "JutulDarcyAD-example"
+@quickactivate "JutulDarcyRules-example"
 
-using JutulDarcyAD
+using JutulDarcyRules
 using Flux
 using LinearAlgebra
 using Optim

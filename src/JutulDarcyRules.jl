@@ -1,7 +1,7 @@
 __precompile__()
-module JutulDarcyAD
+module JutulDarcyRules
 
-    export JutulDarcyADPATH, Darcy, md
+    export JutulDarcyRulesPATH, Darcy, md
 
     using LinearAlgebra
     using Statistics
@@ -19,7 +19,7 @@ module JutulDarcyAD
     import LinearAlgebra: norm, dot
     import ChainRulesCore: rrule
 
-    JutulDarcyADPATH = dirname(pathof(JutulDarcyAD))
+    JutulDarcyRulesPATH = dirname(pathof(JutulDarcyRules))
 
     visCO2 = 1e-4
     visH2O = 1e-3
@@ -33,6 +33,6 @@ module JutulDarcyAD
     const day = 24*3600.0
 
     include("PropertyConversion/PropertyConversion.jl")
-    include("FlowAD/FlowAD.jl")
+    include("FlowRules/FlowRules.jl")
 
-end # module JutulDarcyAD
+end # module JutulDarcyRules
