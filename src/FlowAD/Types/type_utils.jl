@@ -38,9 +38,10 @@ function setup_well_model(M::jutulModel{D, T}, f::Union{jutulForce{D, T}, jutulV
     sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()), reference_densities = [ρH2O, ρCO2])
     domain = discretized_domain_tpfv_flow(tpfv_geometry(CartesianMesh(M)), porosity = M.ϕ, permeability = M.K)
     model, parameters = setup_reservoir_model(domain, sys, wells = Is)
+    parameters[:Reservoir][:PhaseViscosities][1, :] .= visCO2
+    parameters[:Reservoir][:PhaseViscosities][2, :] .= visH2O
     select_output_variables!(model.models.Reservoir, :all)
     ρ = ConstantCompressibilityDensities(p_ref = 150*bar, density_ref = [ρCO2, ρH2O], compressibility = [1e-4/bar, 1e-6/bar])
-    parameters[:Reservoir][:PhaseViscosities] = vcat(visCO2 * ones(prod(M.n))', visH2O * ones(prod(M.n))')
     replace_variables!(model, PhaseMassDensities = ρ)
     replace_variables!(model, RelativePermeabilities = BrooksCoreyRelPerm(sys, [2.0, 2.0], [0.1, 0.1], 1.0))
     for x ∈ keys(model.models)

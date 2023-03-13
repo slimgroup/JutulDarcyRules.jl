@@ -20,4 +20,4 @@ include("test_jutulSource.jl")
 include("test_jutulModel.jl")
 include("test_jutulModeling.jl")
 
-include("test_well_model.jl")
+include("test_model_parameter.jl")
