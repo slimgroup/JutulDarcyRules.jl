@@ -1,7 +1,7 @@
-function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, f::Union{jutulForce{D, N}, jutulVWell{D, N}};
+function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, ϕ::AbstractVector{T}, f::Union{jutulForce{D, N}, jutulVWell{D, N}};
     state0=nothing, visCO2::T=T(visCO2), visH2O::T=T(visH2O),
     ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), info_level::Int64=-1) where {D, T, N}
-    
+   
     Transmissibilities = exp.(LogTransmissibilities)
 
     ### set up simulation time
@@ -10,16 +10,14 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
     ### set up simulation configurations
     model, parameters, state0_, forces = setup_well_model(S.model, f, tstep; visCO2=visCO2, visH2O=visH2O, ρCO2=ρCO2, ρH2O=ρH2O)
     model.models.Reservoir.domain.grid.trans .= Transmissibilities
+    model.models.Reservoir.domain.grid.pore_volumes .= prod(S.model.d) .* ϕ
     parameters[:Reservoir][:Transmissibilities] = Transmissibilities
+    parameters[:Reservoir][:FluidVolume] .= prod(S.model.d) .* ϕ
 
-    if isnothing(state0)
-        state0 = state0_
-    else
-        state0 = dict(state0)
-    end
+    isnothing(state0) || (state0_[:Reservoir] = get_Reservoir_state(state0))
 
     ### simulation
-    sim, config = setup_reservoir_simulator(model, state0, parameters);
+    sim, config = setup_reservoir_simulator(model, state0_, parameters);
     states, reports = simulate!(sim, tstep, forces = forces, config = config, max_timestep_cuts = 1000, info_level=info_level);
     output = jutulStates(states)
     
@@ -33,15 +31,15 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
         states_ref = dict(states_ref_)
         mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step(m, state, dt, step_no, forces, states_ref)
         F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(
-            states, reports, model, state0, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config, use_sparsity = false);
+            states, reports, model, state0_, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config, use_sparsity = false);
         g = dF_o(similar(x0), x0);
-        return NoTangent(), g[1:length(LogTransmissibilities)], NoTangent()
+        return NoTangent(), g[1:length(LogTransmissibilities)], g[length(LogTransmissibilities)+1:length(LogTransmissibilities):prod(S.model.n)]./prod(S.model.d), NoTangent()
     end
     return output, pullback
 end
 
-function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, f::jutulSource{D, N};
-    state0::jutulSimpleState{T}=jutulSimpleState(S.model), visCO2::T=T(visCO2), visH2O::T=T(visH2O),
+function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, ϕ::AbstractVector{T}, f::jutulSource{D, N};
+    state0=nothing, visCO2::T=T(visCO2), visH2O::T=T(visH2O),
     ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), info_level::Int64=-1) where {D, T, N}
     
     Transmissibilities = exp.(LogTransmissibilities)
@@ -52,8 +50,11 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
     tstep = day * S.tstep
     model = simple_model(S.model; ρCO2=ρCO2, ρH2O=ρH2O)
     model.domain.grid.trans .= Transmissibilities
+    model.domain.grid.pore_volumes .= prod(S.model.d) .* ϕ
     parameters = setup_parameters(model, PhaseViscosities = [visCO2, visH2O]);
-    states, reports = simulate(dict(state0), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
+    state0_ = jutulSimpleState(S.model)
+    isnothing(state0) || (state0_ = state0)
+    states, reports = simulate(dict(state0_), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
     output = jutulSimpleStates(states)
     cfg = optimization_config(model, parameters, use_scaling = true, rel_min = 0.1, rel_max = 10)
     for (ki, vi) in cfg
@@ -82,9 +83,9 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
         mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step_simple(m, state, dt, step_no, forces, states_ref)
         Jutul.evaluate_objective(mass_mismatch, model, states_ref, tstep, forces)
         F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(states, reports, model,
-        dict(state0), parameters, tstep, forces, mass_mismatch, cfg, print = -1, param_obj = true);
+        dict(state0_), parameters, tstep, forces, mass_mismatch, cfg, print = -1, param_obj = true);
         g = dF_o(similar(x0), x0);
-        return NoTangent(), g[1:length(LogTransmissibilities)], NoTangent()
+        return NoTangent(), g[1:length(LogTransmissibilities)], g[length(LogTransmissibilities)+1:length(LogTransmissibilities):prod(S.model.n)]./prod(S.model.d), NoTangent()
     end
     return output, pullback
 end
