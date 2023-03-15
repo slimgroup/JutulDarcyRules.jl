@@ -33,7 +33,7 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
         F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(
             states, reports, model, state0_, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config, use_sparsity = false);
         g = dF_o(similar(x0), x0);
-        return NoTangent(), g[1:length(LogTransmissibilities)], g[length(LogTransmissibilities)+1:length(LogTransmissibilities):prod(S.model.n)]./prod(S.model.d), NoTangent()
+        return NoTangent(), g[1:length(LogTransmissibilities)], g[length(LogTransmissibilities)+1:length(LogTransmissibilities)+prod(S.model.n)] * prod(S.model.d), NoTangent()
     end
     return output, pullback
 end
@@ -56,7 +56,7 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
     isnothing(state0) || (state0_ = state0)
     states, reports = simulate(dict(state0_), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
     output = jutulSimpleStates(states)
-    cfg = optimization_config(model, parameters, use_scaling = true, rel_min = 0.1, rel_max = 10)
+    cfg = optimization_config(model, parameters, use_scaling = false, rel_min = 0., rel_max = Inf)
     for (ki, vi) in cfg
         if ki in [:TwoPointGravityDifference, :PhaseViscosities]
             vi[:active] = false
@@ -65,7 +65,6 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
             vi[:scaler] = :log
         end
     end
-    cfg[:Transmissibilities][:use_scaling] = false
 
     function pullback(dy)
         states_dy = output(dy)
@@ -85,7 +84,7 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
         F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(states, reports, model,
         dict(state0_), parameters, tstep, forces, mass_mismatch, cfg, print = -1, param_obj = true);
         g = dF_o(similar(x0), x0);
-        return NoTangent(), g[1:length(LogTransmissibilities)], g[length(LogTransmissibilities)+1:length(LogTransmissibilities):prod(S.model.n)]./prod(S.model.d), NoTangent()
+        return NoTangent(), g[1:length(LogTransmissibilities)], g[length(LogTransmissibilities)+1:length(LogTransmissibilities)+prod(S.model.n)] * prod(S.model.d), NoTangent()
     end
     return output, pullback
 end
