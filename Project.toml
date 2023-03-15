@@ -1,7 +1,7 @@
 name = "JutulDarcyRules"
 uuid = "41f0c4f5-9bdd-4ef1-8c3a-d454dff2d562"
 authors = ["Ziyi Yin <ziyi.yin@gatech.edu>"]
-version = "0.2.2"
+version = "0.2.3"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
