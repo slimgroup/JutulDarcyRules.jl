@@ -29,7 +29,7 @@ g1 = gradient(()->misfit(x0, ϕ, q1, states1), Flux.params(x0, ϕ))
 
 @testset "Taylor-series gradient test of simple jutulModeling" begin
     grad_test(x0->misfit(x0, ϕ, q1, states1), x0, dx/1.5, g1[x0])
-    grad_test(ϕ->misfit(x0, ϕ, q1, states1), ϕ, dϕ/1e2, g1[ϕ])
+    grad_test(ϕ->misfit(x0, ϕ, q1, states1), ϕ, dϕ*0.0023, g1[ϕ])
 end
 
 states2 = S(x, q2)
