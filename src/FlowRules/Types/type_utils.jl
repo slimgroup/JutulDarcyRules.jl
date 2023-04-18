@@ -36,12 +36,13 @@ function setup_well_model(M::jutulModel{D, T}, f::Union{jutulForce{D, T}, jutulV
 
     ### set up model, parameters
     sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()), reference_densities = [ρH2O, ρCO2])
-    domain = discretized_domain_tpfv_flow(tpfv_geometry(CartesianMesh(M)), porosity = M.ϕ, permeability = M.K)
-    model, parameters = setup_reservoir_model(domain, sys, wells = Is)
+    domain_spec = reservoir_domain(CartesianMesh(M), porosity = M.ϕ, permeability = M.K)
+    domain = discretized_domain_tpfv_flow(domain_spec)
+    model_parameters = Dict(:PhaseViscosities=> [visCO2, visH2O])
+    model, parameters = setup_reservoir_model(domain_spec, sys, wells = Is, parameters=model_parameters)
     select_output_variables!(model.models.Reservoir, :all)
     ρ = ConstantCompressibilityDensities(p_ref = 150*bar, density_ref = [ρCO2, ρH2O], compressibility = [1e-4/bar, 1e-6/bar])
     replace_variables!(model, PhaseMassDensities = ρ)
-    replace_variables!(model, PhaseViscosities = vcat(visCO2 * ones(prod(M.n))', visH2O * ones(prod(M.n))'))
     replace_variables!(model, RelativePermeabilities = BrooksCoreyRelPerm(sys, [2.0, 2.0], [0.1, 0.1], 1.0))
     for x ∈ keys(model.models)
         Jutul.select_output_variables!(model.models[x], :all)
@@ -69,8 +70,9 @@ end
 function simple_model(M::jutulModel{D, T}; ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O)) where {D, T}
     sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()))
     g = CartesianMesh(M.n, M.d .* M.n)
-    G = discretized_domain_tpfv_flow(tpfv_geometry(g), porosity = M.ϕ, permeability = M.K)
-    model = SimulationModel(G, sys, output_level = :all)
+    domain_spec = reservoir_domain(g, porosity = M.ϕ, permeability = M.K)
+    G = discretized_domain_tpfv_flow(domain_spec)
+    model = SimulationModel(domain_spec, sys, output_level = :all)
     model.primary_variables[:Pressure] = JutulDarcy.Pressure(minimum = -Inf, max_rel = nothing)
     ρ = ConstantCompressibilityDensities(p_ref = 100*bar, density_ref = [ρCO2, ρH2O], compressibility = [1e-4/bar, 1e-6/bar])
     replace_variables!(model, PhaseMassDensities = ρ)

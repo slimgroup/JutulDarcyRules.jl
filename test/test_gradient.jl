@@ -21,7 +21,7 @@ dϕ = dϕ/norm(dϕ) * norm(ϕ)/2.75e11
 
 @testset "Taylor-series gradient test of jutulModeling with wells" begin
     grad_test(x0->misfit(x0, ϕ, q, states), x0, dx, g[x0])
-    grad_test(ϕ->misfit(x0, ϕ, q, states), ϕ, dϕ, g[ϕ])
+    grad_test(ϕ->misfit(x0, ϕ, q, states), ϕ, dϕ, g[ϕ], h0=2e1, maxiter=12)
 end
 
 states1 = S(x, ϕ, q1)
