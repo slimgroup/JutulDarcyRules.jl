@@ -36,6 +36,7 @@ states2 = S(x, q2)
 g2 = gradient(()->misfit(x0, ϕ, q2, states2), Flux.params(x0, ϕ))
 
 @testset "Taylor-series gradient test of jutulModeling with vertical wells" begin
-    grad_test(x0->misfit(x0, ϕ, q2, states2), x0, dx/1.5, g2[x0])
-    grad_test(ϕ->misfit(x0, ϕ, q2, states2), ϕ, dϕ/4551., g2[ϕ])
+    # This test is very brittle. There may be an issue here.
+    grad_test(x0->misfit(x0, ϕ, q2, states2), x0, dx, g2[x0], h0=1e-2, maxiter=12)
+    grad_test(ϕ->misfit(x0, ϕ, q2, states2), ϕ, dϕ, g2[ϕ], h0=5e0, maxiter=6)
 end
