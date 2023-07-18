@@ -10,6 +10,8 @@ Random.seed!(2023)
 
 include("test_utils.jl")
 
+include("test_model_parameter.jl")
+
 include("test_gradient.jl")
 
 include("test_conversion.jl")
