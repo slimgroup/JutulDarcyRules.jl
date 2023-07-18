@@ -24,10 +24,11 @@ state_T(T) = Dict{Symbol, T}
 complex_state_T(T) = Union{Dict{Symbol, T}, AbstractVector{Dict{Symbol, T}}}
 display(state::jutulAllState{T}) where T = println("$(typeof(state))")
 
+
 jutulState(state::Dict) = jutulState{eltype(state[:Reservoir][:Saturations])}(state)
-jutulStates(states::Vector{complex_state_T(T)}) where T = jutulStates{eltype(states[1][:Reservoir][:Saturations])}([jutulState(states[i]::state_T(T)) for i = 1:length(states)])
+jutulStates(states::Vector{S}) where {T, S<:complex_state_T(T)} = jutulStates{eltype(states[1][:Reservoir][:Saturations])}([jutulState(states[i]::state_T(T)) for i = 1:length(states)])
 jutulSimpleState(state::state_T(T)) where T = jutulSimpleState{eltype(state[:Saturations])}(state)
-jutulSimpleStates(states::Vector{complex_state_T(T)}) where T = jutulSimpleStates{eltype(states[1][:Saturations])}([jutulSimpleState(states[i]::state_T(T)) for i = 1:length(states)])
+jutulSimpleStates(states::Vector{S}) where {T, S<:complex_state_T(T)} = jutulSimpleStates{eltype(states[1][:Saturations])}([jutulSimpleState(states[i]::state_T(T)) for i = 1:length(states)])
 
 Saturations(state::jutulState) = state.state[:Reservoir][:Saturations][1,:]
 Pressure(state::jutulState) = state.state[:Reservoir][:Pressure]
