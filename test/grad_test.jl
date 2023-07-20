@@ -47,7 +47,7 @@ Or we can compute the exponent for the rate of convergence using logarithms.
 log(err(h₁) / err(h₂)) / log (h₁ / h₂) ≈ 2
 ```
 """
-function grad_test(J, x0, Δx, dJdx; ΔJ=nothing, maxiter=6, h0=5e-2, stol=1e-1, hfactor=8e-1)
+function grad_test(J, x0, Δx, dJdx; ΔJ=nothing, maxiter=6, h0=5e-2, stol=1e-1, hfactor=8e-1, unittest=:test)
     if !xor(isnothing(dJdx), isnothing(ΔJ))
         error("Must specify either dJdx or ΔJ")
     end
@@ -102,7 +102,14 @@ function grad_test(J, x0, Δx, dJdx; ΔJ=nothing, maxiter=6, h0=5e-2, stol=1e-1,
 
     factor1 = err1[1:end-1]./err1[2:end]
     factor2 = err2[1:end-1]./err2[2:end]
+
     @test mean(factor1) ≥ expected_f1 - stol
-    @test mean(factor2) ≥ expected_f2 - stol
+    if unittest == :skip
+        @test mean(factor2) ≥ expected_f2 - stol skip=true
+    elseif unittest == :broken
+        @test mean(factor2) ≥ expected_f2 - stol broken=true
+    else
+        @test mean(factor2) ≥ expected_f2 - stol
+    end
 end
 
