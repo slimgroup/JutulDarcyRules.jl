@@ -3,10 +3,10 @@ function test_config()
     d = (30.0, 30.0, 30.0)
 
     ## permeability
-    K0 = 200 * md * ones(n)
+    K0 = 40 * md * ones(n)
     ϕ = 0.25
     K = deepcopy(K0)
-    K[:,:,1:2:end] .*= 100
+    K[:,:,1:2:end] .*= 40
 
     model0 = jutulModel(n, d, ϕ, K1to3(K0))
     model = jutulModel(n, d, ϕ, K1to3(K))

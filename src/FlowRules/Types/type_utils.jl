@@ -35,10 +35,10 @@ function setup_well_model(M::jutulModel{D, T}, f::Union{jutulForce{D, T}, jutulV
     Is, controls = force(M, f, tstep; ρCO2=ρCO2, ρH2O=ρH2O, g=g)    
 
     ### set up model, parameters
-    sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()), reference_densities = [ρH2O, ρCO2])
+    sys = ImmiscibleSystem((VaporPhase(), AqueousPhase()), reference_densities = [ρCO2, ρH2O])
     domain_spec = reservoir_domain(CartesianMesh(M), porosity = M.ϕ, permeability = M.K)
     domain = discretized_domain_tpfv_flow(domain_spec)
-    model_parameters = Dict(:PhaseViscosities=> [visCO2, visH2O])
+    model_parameters = Dict(:Reservoir => Dict(:PhaseViscosities=> [visCO2, visH2O]))
     model, parameters = setup_reservoir_model(domain_spec, sys, wells = Is, parameters=model_parameters)
     select_output_variables!(model.models.Reservoir, :all)
     ρ = ConstantCompressibilityDensities(p_ref = 150*bar, density_ref = [ρCO2, ρH2O], compressibility = [1e-4/bar, 1e-6/bar])
@@ -74,7 +74,7 @@ function simple_model(M::jutulModel{D, T}; ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O))
     G = discretized_domain_tpfv_flow(domain_spec)
     model = SimulationModel(domain_spec, sys, output_level = :all)
     model.primary_variables[:Pressure] = JutulDarcy.Pressure(minimum = -Inf, max_rel = nothing)
-    ρ = ConstantCompressibilityDensities(p_ref = 100*bar, density_ref = [ρCO2, ρH2O], compressibility = [1e-4/bar, 1e-6/bar])
+    ρ = ConstantCompressibilityDensities(p_ref = 150*bar, density_ref = [ρCO2, ρH2O], compressibility = [1e-4/bar, 1e-6/bar])
     replace_variables!(model, PhaseMassDensities = ρ)
     replace_variables!(model, RelativePermeabilities = BrooksCoreyRelPerm(sys, [2.0, 2.0], [0.1, 0.1], 1.0))
     return model
