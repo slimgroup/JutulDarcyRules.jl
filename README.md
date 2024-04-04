@@ -14,6 +14,8 @@ The following publications use [JutulDarcyRules.jl]:
 
 - **"Time-lapse full-waveform permeability inversion: a feasibility study"**, doi: [10.48550/arXiv.2403.04083](https://doi.org/10.48550/arXiv.2403.04083)
 
+- **BEACON: Bayesian Experimental design Acceleration with Conditional Normalizing flows – a case study in optimal monitor well placement for CO2 sequestration**, doi: [10.48550/arXiv.2404.00075](https://doi.org/10.48550/arXiv.2404.00075)
+
 - **"Inference of CO2 flow patterns -- a feasibility study"**, doi: [10.48550/arXiv.2311.00290](https://doi.org/10.48550/arXiv.2311.00290)
 
 - **"Solving multiphysics-based inverse problems with learned surrogates and constraints"**, doi: [10.1186/s40323-023-00252-0](https://doi.org/10.1186/s40323-023-00252-0)
