@@ -1,7 +1,7 @@
 name = "JutulDarcyRules"
 uuid = "41f0c4f5-9bdd-4ef1-8c3a-d454dff2d562"
 authors = ["Ziyi Yin <ziyi.yin@gatech.edu>"]
-version = "0.2.7"
+version = "0.2.8"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
@@ -15,7 +15,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 ChainRulesCore = "1"
-Flux = "0.12, 0.13"
+Flux = "0.12, 0.13, 0.14"
 Jutul = "=0.2.11"
 JutulDarcy = "=0.2.7"
 Optim = "1"
