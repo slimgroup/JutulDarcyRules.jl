@@ -22,7 +22,7 @@ end
 
 state_T(T) = Dict{Symbol, T}
 complex_state_T(T) = Union{Dict{Symbol, T}, AbstractVector{Dict{Symbol, T}}}
-display(state::jutulAllState{T}) where T = println("$(typeof(state))")
+# display(state::jutulAllState{T}) where T = println("$(typeof(state))")
 
 
 jutulState(state::Dict) = jutulState{eltype(state[:Reservoir][:Saturations])}(state)
