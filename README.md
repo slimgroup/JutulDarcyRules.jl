@@ -1,8 +1,8 @@
-<h1 align="center">JutulDarcyRules: auto-differentiable two-phase flow solvers based on Jutul and JutulDarcy</h1>
+<h1 align="center">JutulDarcyRules: auto-differentiable multiphase flow solvers based on JutulDarcy with ChainRules integration</h1>
 
 [![][license-img]][license-status] [![][zenodo-img]][zenodo-status]
 
-Interoperate [Jutul.jl] and [JutulDarcy.jl] to other Julia packages via [ChainRules.jl]
+Interoperate [Jutul.jl] and [JutulDarcy.jl] to other Julia packages via [ChainRules.jl]. We welcome you to read the open-access article, ["Learned multiphysics inversion with differentiable programming and machine learning"](https://library.seg.org/doi/10.1190/tle42070474.1), for the design principle of this software package.
 
 ## LICENSE
 
@@ -12,7 +12,7 @@ The software used in this repository can be modified and redistributed according
 
 The following publications use [JutulDarcyRules.jl]:
 
-- **"Time-lapse full-waveform permeability inversion: a feasibility study"**, doi: [10.48550/arXiv.2403.04083](https://doi.org/10.48550/arXiv.2403.04083)
+- **"Time-lapse full-waveform permeability inversion: A feasibility study"**, doi: [10.1190/tle43080544.1](https://library.seg.org/doi/10.1190/tle43080544.1)
 
 - **"A Digital Twin for Geological Carbon Storage with Controlled Injectivity"**, doi: [10.48550/arXiv.2403.19819](https://doi.org/10.48550/arXiv.2403.19819)
 
@@ -30,7 +30,7 @@ If you use our software for your research, we appreciate it if you cite us follo
 
 ## Authors
 
-This repository is written by Ziyi Yin from the [Seismic Laboratory for Imaging and Modeling](https://slim.gatech.edu/) (SLIM) at the Georgia Institute of Technology.
+This package is developed by the researchers at the [Seismic Laboratory for Imaging and Modeling](https://slim.gatech.edu/) (SLIM) at the Georgia Institute of Technology.
 
 If you have any question, we welcome your contributions to our software by opening issue or pull request.
 
