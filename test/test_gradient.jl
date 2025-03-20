@@ -14,16 +14,16 @@ using Flux: withgradient
 
 function misfit(x0, ϕ0, q, states_ref)
     states = S0(x0, ϕ0, q; config)
-    sat_misfit = 0.5 * sum(sum((s[:Reservoir][:Saturations][1, :] .- sr[:Reservoir][:Saturations][1, :]) .^ 2) for (s, sr) in zip(states.states, states_ref.states))
-    pres_misfit = 0.5 * sum(sum((s[:Reservoir][:Pressure] .- sr[:Reservoir][:Pressure]) .^ 2) for (s, sr) in zip(states.states, states_ref.states))
+    sat_misfit = 0.5 * sum(sum((s[:Reservoir][:Saturations][1, :] .- sr[:Reservoir][:Saturations][1, :]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
+    pres_misfit = 0.5 * sum(sum((s[:Reservoir][:Pressure] .- sr[:Reservoir][:Pressure]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
     # sat_misfit
     sat_misfit + pres_misfit * 1e-14
 end
 
 function misfit_simple(x0, ϕ0, q, states_ref)
     states = S0(x0, ϕ0, q; config=config1)
-    sat_misfit = 0.5 * sum(sum((s[:Saturations][1, :] .- sr[:Saturations][1, :]) .^ 2) for (s, sr) in zip(states.states, states_ref.states))
-    pres_misfit = 0.5 * sum(sum((s[:Pressure] .- sr[:Pressure]) .^ 2) for (s, sr) in zip(states.states, states_ref.states))
+    sat_misfit = 0.5 * sum(sum((s[:Saturations][1, :] .- sr[:Saturations][1, :]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
+    pres_misfit = 0.5 * sum(sum((s[:Pressure] .- sr[:Pressure]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
     # sat_misfit
     sat_misfit + pres_misfit * 1e-14
 end
