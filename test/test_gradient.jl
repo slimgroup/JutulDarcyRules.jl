@@ -15,16 +15,14 @@ using Flux: withgradient
 function misfit(x0, ϕ0, q, states_ref)
     states = S0(x0, ϕ0, q; config)
     sat_misfit = 0.5 * sum(sum((s[:Reservoir][:Saturations][1, :] .- sr[:Reservoir][:Saturations][1, :]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
-    pres_misfit = 0.5 * sum(sum((s[:Reservoir][:Pressure] .- sr[:Reservoir][:Pressure]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
-    # sat_misfit
+    pres_misfit = 0.5 * sum(sum((s[:Reservoir][:Pressure] .- sr[:Reservoir][:Pressure]) .^ 2) for (s, sr) in zip(states.states[[1,end]], states_ref.states[[1,end]]))
     sat_misfit + pres_misfit * 1e-14
 end
 
 function misfit_simple(x0, ϕ0, q, states_ref)
     states = S0(x0, ϕ0, q; config=config1)
     sat_misfit = 0.5 * sum(sum((s[:Saturations][1, :] .- sr[:Saturations][1, :]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
-    pres_misfit = 0.5 * sum(sum((s[:Pressure] .- sr[:Pressure]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
-    # sat_misfit
+    pres_misfit = 0.5 * sum(sum((s[:Pressure] .- sr[:Pressure]) .^ 2) for (s, sr) in zip(states.states[[1,end]], states_ref.states[[1,end]]))
     sat_misfit + pres_misfit * 1e-14
 end
 
@@ -32,7 +30,7 @@ rng = MersenneTwister(2023)
 
 function sample_dx()
     dx = randn(rng, length(x0))
-    dx = dx/norm(dx) * norm(x0)/5.0
+    dx = dx/norm(dx) * norm(x0)/3.0
 end
 
 dx = sample_dx()

@@ -1,5 +1,5 @@
 using ChainRulesCore: rrule, unthunk, NoTangent, @not_implemented
-using Jutul: Jutul, simulate, setup_parameter_optimization, optimization_config, vectorize_variables, SimulationModel, MultiModel, submodels, get_primary_variables
+using Jutul: Jutul, simulate, setup_parameter_optimization, optimization_config, vectorize_variables, SimulationModel, MultiModel, submodels, submodels_symbols, get_primary_variables
 using JutulDarcy
 
 function simulate_ad(state0, model, tstep, parameters, forces;
@@ -55,28 +55,6 @@ function simulate_ad(state0, model, tstep, parameters, forces;
     return output
 end
 
-get_state_keys(model::SimulationModel, state::Dict{Any, Any}) = keys(state)
-function get_state_keys(model::MultiModel, state::Dict{Any, Any})
-    state_keys = Dict{Any, Any}()
-    for (k, m) in pairs(submodels(model))
-        if haskey(state, k)
-            state_keys[k] = keys(state[k])
-        else
-            state_keys[k] = ()
-        end
-    end
-    return state_keys
-end
-
-set_state_keys!(model::SimulationModel, state::Dict{Any, Any}) = nothing
-function set_state_keys!(model::MultiModel, state::Dict{Any, Any})
-    for (k, m) in pairs(submodels(model))
-        if !haskey(state, k)
-            state[k] = nothing
-        end
-    end
-end
-
 get_eltype(model::SimulationModel, state) = eltype(state.Saturations)
 get_eltype(model::MultiModel, state) = get_eltype(model[:Reservoir], state.Reservoir)
 
@@ -107,18 +85,17 @@ function ChainRulesCore.rrule(::typeof(simulate_ad), state0, model, tstep, param
         #   up a vectorizer first. It should be restricted to the targets
         #   that are nonzero in dstates.
 
-        targets_states = get_state_keys(model, first(dstates))
-        mapper_states = first(Jutul.variable_mapper(model, :primary; targets=targets_states))
-        for s in dstates
-            set_state_keys!(model, s)
-        end
-
         function F(model::SimulationModel, state_ad, dt, step_no, forces)
             obj = 0.0
-            for (k, v) in mapper_states
+            dstate = dstates[step_no]
+            if isa(dstate, ChainRulesCore.ZeroTangent)
+                return obj
+            end
+            state = states[step_no]
+            for k in keys(dstate)
                 state_ad_k = state_ad[k]
-                dstate_k = dstates[step_no][k]
-                state_k = states[step_no][k]
+                dstate_k = dstate[k]
+                state_k = state[k]
                 c = dstate_k .- state_k
                 obj += sum((state_ad_k .+ c) .^ 2)
             end
@@ -126,11 +103,16 @@ function ChainRulesCore.rrule(::typeof(simulate_ad), state0, model, tstep, param
         end
         function F(model::MultiModel, state_ad, dt, step_no, forces)
             obj = 0.0
-            for (model, targets) in mapper_states
+            dstate = dstates[step_no]
+            if isa(dstate, ChainRulesCore.ZeroTangent)
+                return obj
+            end
+            state = states[step_no]
+            for model in keys(dstate)
                 state_ad_model = state_ad[model]
-                dstate_model = dstates[step_no][model]
-                state_model = states[step_no][model]
-                for (k, v) in targets
+                dstate_model = dstate[model]
+                state_model = state[model]
+                for k in keys(dstate_model)
                     state_ad_k = state_ad_model[k]
                     dstate_k = dstate_model[k]
                     state_k = state_model[k]
