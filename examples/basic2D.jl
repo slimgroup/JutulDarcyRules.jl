@@ -1,7 +1,11 @@
 ## A simple 2D example for fluid-flow simulation
 
-using DrWatson
-@quickactivate "JutulDarcyRules"
+try
+    using DrWatson
+    @quickactivate "JutulDarcyRules"
+catch e
+    Pkg.activate(joinpath(@__DIR__, ".."))
+end
 
 using JutulDarcyRules
 using LinearAlgebra

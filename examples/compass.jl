@@ -1,7 +1,11 @@
 ## A 2D compass example
 
-using DrWatson
-@quickactivate "JutulDarcyRules"
+try
+    using DrWatson
+    @quickactivate "JutulDarcyRules"
+catch e
+    Pkg.activate(joinpath(@__DIR__, ".."))
+end
 
 using JutulDarcyRules
 using LinearAlgebra
