@@ -1,11 +1,15 @@
 ## A 64×64 2D example for permeability inversion of a tortuous channel
 
-using DrWatson
-@quickactivate "JutulDarcyRules-example"
+try
+    using DrWatson
+    @quickactivate "JutulDarcyRules"
+catch e
+    Pkg.activate(joinpath(@__DIR__, ".."))
+end
 
 using JutulDarcyRules
 using LinearAlgebra
-using PyPlot
+using PythonPlot
 using Flux
 using LineSearches
 using JLD2
