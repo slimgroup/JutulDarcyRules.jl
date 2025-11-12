@@ -96,8 +96,8 @@ function ChainRulesCore.rrule(::typeof(simulate_ad), state0, model, tstep, param
                 state_ad_k = state_ad[k]
                 dstate_k = dstate[k]
                 state_k = state[k]
-                c = dstate_k .- state_k
-                obj += sum((state_ad_k .+ c) .^ 2)
+                # c = dstate_k .- state_k
+                obj += sum((state_ad_k .+ dstate_k .- state_k) .^ 2)
             end
             return obj / 2
         end
@@ -116,8 +116,8 @@ function ChainRulesCore.rrule(::typeof(simulate_ad), state0, model, tstep, param
                     state_ad_k = state_ad_model[k]
                     dstate_k = dstate_model[k]
                     state_k = state_model[k]
-                    c = dstate_k .- state_k
-                    obj += sum((state_ad_k .+ c) .^ 2)
+                    # c = dstate_k .- state_k
+                    obj += sum((state_ad_k .+ dstate_k .- state_k) .^ 2)
                 end
             end
             return obj / 2

@@ -118,8 +118,6 @@ function ChainRulesCore.rrule(
     end
     output, simulate_pullback = Flux.pullback(simulate_ad_wrapper, model, x0)
 
-    states, report = output
-
     function S_pullback(doutput)
         dmodel, dx0 = simulate_pullback(doutput)
         if isa(dx0, AbstractVector)
@@ -128,8 +126,8 @@ function ChainRulesCore.rrule(
             dparams = dx0
         end
         dTransmissibilities = dparams[:Reservoir][:Transmissibilities]
-        dLogTransmissibilities = Transmissibilities .* dTransmissibilities
-        # dLogTransmissibilities = TLogTransmissibilities_pullback()[1]
+        # dLogTransmissibilities = Transmissibilities .* dTransmissibilities
+        dLogTransmissibilities = LogTransmissibilities_pullback(dTransmissibilities)[1]
         dϕ = dmodel.data_domain.data[:porosity][1]
         df = @not_implemented("I don't know how to do this.")
         return NoTangent(), dLogTransmissibilities, dϕ, df
@@ -155,7 +153,7 @@ function (S::jutulModeling{D, T})(LogTransmissibilities::AbstractVector{T}, ϕ::
     model.data_domain[:porosity] = ϕ
     parameters[:Transmissibilities] = Transmissibilities
     parameters[:FluidVolume] = FluidVolume
-    isnothing(state0) || (state0_ = state0)
+    # isnothing(state0) || (state0_ = state0)
 
     # Set up config for gradient.
     opt_config_params, mapper = @ignore_derivatives begin
@@ -233,8 +231,8 @@ function ChainRulesCore.rrule(
             dparams = dx0
         end
         dTransmissibilities = dparams[:Transmissibilities]
-        dLogTransmissibilities = Transmissibilities .* dTransmissibilities
-        # dLogTransmissibilities = LogTransmissibilities_pullback(dTransmissibilities)[1]
+        # dLogTransmissibilities = Transmissibilities .* dTransmissibilities
+        dLogTransmissibilities = LogTransmissibilities_pullback(dTransmissibilities)[1]
         dϕ = dmodel.data_domain.data[:porosity][1]
         df = @not_implemented("I don't know how to do this.")
         return NoTangent(), dLogTransmissibilities, dϕ, df

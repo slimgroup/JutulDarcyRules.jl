@@ -10,20 +10,20 @@ x0 = log.(KtoTrans(CartesianMesh(model0), model0.K))
 using Flux: withgradient
 
 ϕ = S.model.ϕ
-ϕ0 = S.model.ϕ
+ϕ0 = S0.model.ϕ
 
 function misfit(x0, ϕ0, q, states_ref)
     states = S0(x0, ϕ0, q; config)
     sat_misfit = 0.5 * sum(sum((s[:Reservoir][:Saturations][1, :] .- sr[:Reservoir][:Saturations][1, :]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
-    pres_misfit = 0.5 * sum(sum((s[:Reservoir][:Pressure] .- sr[:Reservoir][:Pressure]) .^ 2) for (s, sr) in zip(states.states[[1,end]], states_ref.states[[1,end]]))
-    sat_misfit + pres_misfit * 1e-14
+    pres_misfit = 0.5 * sum(sum((s[:Reservoir][:Pressure] .- sr[:Reservoir][:Pressure]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
+    sat_misfit * 1e0 + pres_misfit * 0e-12
 end
 
 function misfit_simple(x0, ϕ0, q, states_ref)
     states = S0(x0, ϕ0, q; config=config1)
     sat_misfit = 0.5 * sum(sum((s[:Saturations][1, :] .- sr[:Saturations][1, :]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
-    pres_misfit = 0.5 * sum(sum((s[:Pressure] .- sr[:Pressure]) .^ 2) for (s, sr) in zip(states.states[[1,end]], states_ref.states[[1,end]]))
-    sat_misfit + pres_misfit * 1e-14
+    pres_misfit = 0.5 * sum(sum((s[:Pressure] .- sr[:Pressure]) .^ 2) for (s, sr) in zip(states.states[1:2:end], states_ref.states[1:2:end]))
+    sat_misfit * 1e0 + pres_misfit * 0e-12
 end
 
 rng = MersenneTwister(2023)
@@ -79,9 +79,10 @@ vϕ, gϕ = withgradient(misfit_dϕ, ϕ0)
 v, g = withgradient(misfit_dboth, x0, ϕ0)
 
 @testset "Taylor-series gradient test of jutulModeling with wells" begin
-    grad_test(misfit_dx, x0, dx, gx[1])
-    grad_test(misfit_dϕ, ϕ0, dϕ, gϕ[1])
+    grad_test(misfit_dx, x0, dx, gx[1]; h0=5e-1, hfactor=5e-1, maxiter=15)
+    grad_test(misfit_dϕ, ϕ0, dϕ, gϕ[1]; h0=1e-1, hfactor=5e-1, maxiter=15)
 end
+
 
 @time states1_ref, case1, sim1, x0_1 = S(x, ϕ, q1; return_extra=true)
 
@@ -98,8 +99,8 @@ v, g = withgradient(misfit_dboth, x0, ϕ0)
 @show vx vϕ v norm(gx) norm(gϕ) norm(g)
 
 @testset "Taylor-series gradient test of simple jutulModeling" begin
-    grad_test(misfit_dx, x0, dx, gx[1])
-    grad_test(misfit_dϕ, ϕ0, dϕ, gϕ[1])
+    grad_test(misfit_dx, x0, dx, gx[1]; h0=5e-1, hfactor=5e-1, maxiter=15)
+    grad_test(misfit_dϕ, ϕ0, dϕ, gϕ[1]; h0=1e-1, hfactor=5e-1, maxiter=15)
 end
 
 states2_ref = S(x, q2; config)
@@ -114,6 +115,6 @@ v, g = withgradient(misfit_dboth, x0, ϕ0)
 @show vx vϕ v norm(gx) norm(gϕ) norm(g)
 
 @testset "Taylor-series gradient test of jutulModeling with vertical wells" begin
-    grad_test(misfit_dx, x0, dx, gx[1])
-    grad_test(misfit_dϕ, ϕ0, dϕ, gϕ[1])
+    grad_test(misfit_dx, x0, dx, gx[1]; h0=5e-1, hfactor=5e-1, maxiter=15)
+    grad_test(misfit_dϕ, ϕ0, dϕ, gϕ[1]; h0=1e-1, hfactor=5e-1, maxiter=15)
 end

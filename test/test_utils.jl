@@ -5,10 +5,12 @@ function test_config()
     ## permeability
     K0 = 40 * md * ones(n)
     ϕ = 0.25
+    dϕ = rand() - 0.5
+    ϕ0 = ϕ + dϕ/norm(dϕ) * 1e-1
     K = deepcopy(K0)
     K[:,:,1:2:end] .*= 40
 
-    model0 = jutulModel(n, d, ϕ, K1to3(K0))
+    model0 = jutulModel(n, d, ϕ0, K1to3(K0))
     model = jutulModel(n, d, ϕ, K1to3(K))
 
     ## simulation time steppings
