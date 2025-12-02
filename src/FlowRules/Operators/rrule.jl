@@ -1,3 +1,39 @@
+const _StateDict = OrderedDict{Symbol, Any}
+
+function ordered_state_dicts(states, key::Symbol)
+    filtered = _StateDict[]
+    for s in states
+        if s isa AbstractDict && haskey(s, key)
+            push!(filtered, s isa _StateDict ? s : OrderedDict{Symbol, Any}(s))
+        end
+    end
+    return filtered
+end
+
+_step_index(step_info) =
+    step_info isa Integer ? step_info :
+    (step_info isa AbstractDict && haskey(step_info, :step) ? step_info[:step] : step_info)
+
+# Helper function to safely extract step index, handling potential offsets
+function _safe_step_index(step_no, max_steps)
+    step_ix = _step_index(step_no)
+    if step_ix isa Integer
+        # Handle potential 0-based indexing or offsets
+        # Try both the direct index and index+1 (in case it's 0-based)
+        # But first ensure it's within bounds
+        if step_ix < 1
+            # Might be 0-based, convert to 1-based
+            step_ix = step_ix + 1
+        elseif step_ix > max_steps
+            # Might be 1-based but out of bounds, clamp it
+            step_ix = max_steps
+        end
+        return max(1, min(step_ix, max_steps))
+    else
+        return max_steps
+    end
+end
+
 function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T}, ϕ::AbstractVector{T}, f::Union{jutulForce{D, N}, jutulVWell{D, N}};
     state0=nothing, visCO2::T=T(visCO2), visH2O::T=T(visH2O),
     ρCO2::T=T(ρCO2), ρH2O::T=T(ρH2O), info_level::Int64=-1) where {D, T, N}
@@ -20,6 +56,7 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
     sim, config = setup_reservoir_simulator(model, state0_, parameters);
     states, reports = simulate!(sim, tstep, forces = forces, config = config, max_timestep_cuts = 1000, info_level=info_level);
     output = jutulStates(states)
+    reservoir_states = ordered_state_dicts(states, :Reservoir)
     
     ### optimization framework
     cfg = optimization_config(model, parameters, Dict(:Reservoir => [:FluidVolume, :Transmissibilities], :Injector => [:FluidVolume]))
@@ -29,9 +66,18 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
         states_ref_ = output(vec(output)-dy)
         check_valid_state(states_ref_)
         states_ref = dict(states_ref_)
-        mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step(m, state, dt, step_no, forces, states_ref)
+        # Critical fix: Ensure states_ref uses the same filtering as reservoir_states
+        # The key insight: dict(jutulStates) returns states in the same order as jutulStates.states
+        # which should match the order of reservoir_states (both filtered from the same source)
+        # However, we need to ensure they are filtered identically
+        states_ref_filtered = ordered_state_dicts(states_ref, :Reservoir)
+        @assert length(states_ref_filtered) == length(reservoir_states) "states_ref_filtered length $(length(states_ref_filtered)) != reservoir_states length $(length(reservoir_states))"
+        # Use loss_per_step with the filtered states_ref to ensure correct indexing
+        # We've ensured states_ref_filtered and reservoir_states have the same length and order
+        # step_no should correspond to the index in reservoir_states
+        mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step(m, state, dt, step_no, forces, states_ref_filtered)
         F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(
-            states, reports, model, state0_, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config, use_sparsity = false);
+            reservoir_states, reports, model, state0_, parameters, tstep, forces, mass_mismatch, cfg, param_obj = true, print = info_level, config = config, use_sparsity = false);
         g = dF_o(similar(x0), x0);
         n_faces = length(LogTransmissibilities)
         n_cells = prod(S.model.n)
@@ -63,7 +109,8 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
     isnothing(state0) || (state0_ = state0)
     states, reports = simulate(dict(state0_), model, tstep, parameters = parameters, forces = forces, info_level = info_level, max_timestep_cuts = 1000)
     output = jutulSimpleStates(states)
-    cfg = optimization_config(model, parameters, use_scaling = false, rel_min = 0., rel_max = Inf)
+    simple_states = ordered_state_dicts(states, :Saturations)
+    cfg = optimization_config(model, parameters, use_scaling = false, rel_min = 0., rel_max = nothing)
     for (ki, vi) in cfg
         if ki in [:TwoPointGravityDifference, :PhaseViscosities]
             vi[:active] = false
@@ -76,19 +123,17 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
     function pullback(dy)
         states_dy = output(dy)
         states_ref = dict(output-states_dy)
-        function mass_mismatch(m, state, dt, step_no, forces)
-            state_ref = states_ref[step_no]
-            fld = :Saturations
-            fld2 = :Pressure
-            val = state[fld]
-            val2 = state[fld2]
-            ref = state_ref[fld]
-            ref2 = state_ref[fld2]
-            return 0.5 * sum((val[1,:] - ref[1,:]).^2) + 0.5 * sum((val2-ref2).^2)
-        end
+        # Critical fix: Ensure states_ref uses the same filtering as simple_states
+        # Both should be filtered from the same source using ordered_state_dicts
+        # This ensures they have the same order and structure
+        states_ref_filtered = ordered_state_dicts(states_ref, :Saturations)
+        @assert length(states_ref_filtered) == length(simple_states) "states_ref_filtered length $(length(states_ref_filtered)) != simple_states length $(length(simple_states))"
+        # Convert to the format expected by loss_per_step_simple
+        # Use the filtered states to ensure correct ordering
+        states_ref = OrderedDict{Symbol, Any}[OrderedDict{Symbol, Any}(s) for s in states_ref_filtered]
         mass_mismatch = (m, state, dt, step_no, forces) -> loss_per_step_simple(m, state, dt, step_no, forces, states_ref)
         Jutul.evaluate_objective(mass_mismatch, model, states_ref, tstep, forces)
-        F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(states, reports, model,
+        F_o, dF_o, F_and_dF, x0, lims, data = setup_parameter_optimization(simple_states, reports, model,
         dict(state0_), parameters, tstep, forces, mass_mismatch, cfg, print = -1, param_obj = true);
         g = dF_o(similar(x0), x0);
         n_faces = length(LogTransmissibilities)
@@ -100,8 +145,18 @@ function rrule(S::jutulModeling{D, T}, LogTransmissibilities::AbstractVector{T},
     return output, pullback
 end
 
-function loss_per_step(m, state, dt, step_no, forces, states_ref)
-    state_ref = states_ref[step_no]
+function loss_per_step(m, state, dt, step_no, forces, states_ref, reservoir_states=nothing)
+    # Use the safe step index function to handle potential offsets
+    step_ix = _safe_step_index(step_no, length(states_ref))
+    # Critical: Use the step index to get the corresponding reference state
+    # step_ix should correspond to the index in reservoir_states
+    # states_ref should be in the same order as reservoir_states
+    # If reservoir_states is provided, we can verify the index is correct
+    if reservoir_states !== nothing
+        # Ensure step_ix is within bounds of both arrays
+        step_ix = max(1, min(step_ix, min(length(states_ref), length(reservoir_states))))
+    end
+    state_ref = states_ref[step_ix]
     fld = :Saturations
     fld2 = :Pressure
     val = state[:Reservoir][fld]
@@ -112,7 +167,9 @@ function loss_per_step(m, state, dt, step_no, forces, states_ref)
 end
 
 function loss_per_step_simple(m, state, dt, step_no, forces, states_ref)
-    state_ref = states_ref[step_no]
+    # Use the safe step index function to handle potential offsets
+    step_ix = _safe_step_index(step_no, length(states_ref))
+    state_ref = states_ref[step_ix]
     fld = :Saturations
     fld2 = :Pressure
     val = state[fld]

@@ -26,9 +26,47 @@ display(state::jutulAllState{T}) where T = println("$(typeof(state))")
 
 
 jutulState(state::Dict) = jutulState{eltype(state[:Reservoir][:Saturations])}(state)
+function jutulState(state)
+    if isa(state, Dict)
+        return jutulState{eltype(state[:Reservoir][:Saturations])}(state)
+    elseif hasmethod(keys, (typeof(state),)) && hasmethod(getindex, (typeof(state), Symbol))
+        # Handle OrderedDict or other dict-like types
+        return jutulState(Dict(state))
+    else
+        error("Cannot convert $(typeof(state)) to jutulState")
+    end
+end
 jutulStates(states::Vector{S}) where {T, S<:complex_state_T(T)} = jutulStates{eltype(states[1][:Reservoir][:Saturations])}([jutulState(states[i]::state_T(T)) for i = 1:length(states)])
+function jutulStates(states::Vector)
+    # Filter out non-state entries (like reports) and convert to Dict
+    state_dicts = []
+    for s in states
+        if hasmethod(keys, (typeof(s),)) && haskey(s, :Reservoir)
+            push!(state_dicts, Dict(s))
+        end
+    end
+    return jutulStates([jutulState(d) for d in state_dicts])
+end
 jutulSimpleState(state::state_T(T)) where T = jutulSimpleState{eltype(state[:Saturations])}(state)
+function jutulSimpleState(state)
+    if isa(state, Dict)
+        return jutulSimpleState{eltype(state[:Saturations])}(state)
+    elseif hasmethod(keys, (typeof(state),)) && hasmethod(getindex, (typeof(state), Symbol))
+        return jutulSimpleState(Dict(state))
+    else
+        error("Cannot convert $(typeof(state)) to jutulSimpleState")
+    end
+end
 jutulSimpleStates(states::Vector{S}) where {T, S<:complex_state_T(T)} = jutulSimpleStates{eltype(states[1][:Saturations])}([jutulSimpleState(states[i]::state_T(T)) for i = 1:length(states)])
+function jutulSimpleStates(states::Vector)
+    state_dicts = []
+    for s in states
+        if hasmethod(keys, (typeof(s),)) && haskey(s, :Saturations)
+            push!(state_dicts, Dict(s))
+        end
+    end
+    return jutulSimpleStates([jutulSimpleState(d) for d in state_dicts])
+end
 
 Saturations(state::jutulState) = state.state[:Reservoir][:Saturations][1,:]
 Pressure(state::jutulState) = state.state[:Reservoir][:Pressure]
@@ -48,9 +86,9 @@ get_nn(state::jutulSimpleOrMultiModelStates) = get_nn(state.states[1])
 
 ###### turn jutulStates to state dictionary
 
-dict(state::jutulSimpleOrMultiModelState) = state.state
+dict(state::jutulSimpleOrMultiModelState) = OrderedDict{Symbol, Any}(state.state)
 dict(state::jutulSimpleOrMultiModelStates) = [dict(state.states[i]) for i = 1:get_nt(state)]
-dict(state::Dict) = state
+dict(state::AbstractDict) = OrderedDict{Symbol, Any}(state)
 
 ###### AbstractVector
 
