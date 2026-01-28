@@ -1,3 +1,5 @@
+using Printf
+
 mean(x) = sum(x)/length(x)
 
 function log_division(a, b)
