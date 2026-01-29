@@ -10,6 +10,7 @@ module JutulDarcyRules
     using Optim
     using Flux
     using ChainRulesCore
+    using OrderedCollections
     import Jutul: JutulGeometry, get_facepos, compute_face_trans, compute_half_face_trans, expand_perm
     import Jutul: SimulationModel, select_output_variables!
     import Jutul: optimization_targets, variable_mapper, optimization_limits, print_parameter_optimization_config
